@@ -1,0 +1,10 @@
+.gradle/
+.kotlin/
+.idea/
+build/
+*/build/
+local.properties
+*.iml
+captures/
+.externalNativeBuild/
+.cxx/

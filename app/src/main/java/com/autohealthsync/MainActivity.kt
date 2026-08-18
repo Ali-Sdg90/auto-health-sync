@@ -1,0 +1,98 @@
+package com.autohealthsync
+
+import android.Manifest
+import android.content.Intent
+import android.content.pm.PackageManager
+import android.os.Build
+import android.os.Bundle
+import androidx.activity.ComponentActivity
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.compose.setContent
+import androidx.activity.enableEdgeToEdge
+import androidx.activity.result.IntentSenderRequest
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.compose.ui.graphics.Color
+import androidx.core.content.ContextCompat
+import androidx.core.net.toUri
+import androidx.health.connect.client.PermissionController
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.compose.LifecycleEventEffect
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.autohealthsync.ui.MainScreen
+import com.autohealthsync.ui.MainViewModel
+import com.autohealthsync.ui.UiEvent
+import com.autohealthsync.ui.theme.AutoHealthSyncTheme
+
+class MainActivity : ComponentActivity() {
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        enableEdgeToEdge()
+        setContent {
+            AutoHealthSyncTheme {
+                val viewModel: MainViewModel = viewModel()
+                val state by viewModel.uiState.collectAsStateWithLifecycle()
+                val snackbar = remember { SnackbarHostState() }
+                val healthLauncher = rememberLauncherForActivityResult(
+                    PermissionController.createRequestPermissionResultContract(),
+                    viewModel::onHealthPermissionsResult,
+                )
+                val driveLauncher = rememberLauncherForActivityResult(
+                    ActivityResultContracts.StartIntentSenderForResult(),
+                ) { result -> viewModel.completeDriveConnection(result.data) }
+                val notificationLauncher = rememberLauncherForActivityResult(
+                    ActivityResultContracts.RequestPermission(),
+                ) { }
+
+                LaunchedEffect(Unit) {
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
+                        ContextCompat.checkSelfPermission(
+                            this@MainActivity,
+                            Manifest.permission.POST_NOTIFICATIONS,
+                        ) != PackageManager.PERMISSION_GRANTED
+                    ) {
+                        notificationLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+                    }
+                    viewModel.events.collect { event ->
+                        when (event) {
+                            is UiEvent.Message -> snackbar.showSnackbar(event.text)
+                            is UiEvent.ResolveDriveAuthorization -> driveLauncher.launch(
+                                IntentSenderRequest.Builder(event.pendingIntent.intentSender).build(),
+                            )
+                            UiEvent.RequestHealthPermissions -> healthLauncher.launch(viewModel.healthPermissions)
+                            UiEvent.OpenHealthConnectStore -> openHealthConnectStore()
+                        }
+                    }
+                }
+                LifecycleEventEffect(Lifecycle.Event.ON_RESUME) {
+                    viewModel.refreshConnections()
+                }
+                Scaffold(
+                    containerColor = Color.Transparent,
+                    snackbarHost = { SnackbarHost(snackbar) },
+                ) { padding ->
+                    MainScreen(
+                        state = state,
+                        onHealthConnect = viewModel::requestHealthConnection,
+                        onDriveConnect = viewModel::requestDriveConnection,
+                        onBackupNow = viewModel::backupNow,
+                        contentPadding = padding,
+                    )
+                }
+            }
+        }
+    }
+
+    private fun openHealthConnectStore() {
+        val market = "market://details?id=com.google.android.apps.healthdata".toUri()
+        val web = "https://play.google.com/store/apps/details?id=com.google.android.apps.healthdata".toUri()
+        runCatching { startActivity(Intent(Intent.ACTION_VIEW, market)) }
+            .onFailure { startActivity(Intent(Intent.ACTION_VIEW, web)) }
+    }
+}

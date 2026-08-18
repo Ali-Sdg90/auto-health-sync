@@ -1,0 +1,6 @@
+<resources>
+    <string name="app_name">Auto Health Sync</string>
+    <string name="health_permissions_rationale_title">Why Auto Health Sync needs access</string>
+    <string name="health_permissions_rationale_body">Auto Health Sync reads only the daily health summaries you choose to grant. It never writes to Health Connect, and it uploads compact daily JSON backups only to your Google Drive.</string>
+</resources>
+
