@@ -8,8 +8,8 @@ It follows one deliberately small pipeline:
 
 ## What version 1 does
 
-- Reads steps, distance, active calories, workouts, heart rate, resting heart rate, sleep, and SpO₂ from Health Connect.
-- Filters every read to the Health Sync Android package (`nl.appyhapps.healthsync`), preventing phone-originated steps and unrelated sources from being mixed into the archive.
+- Reads steps, distance, workouts, heart rate, resting heart rate, sleep, and SpO₂ from Health Connect.
+- Reads all sources available through Health Connect; source permissions, stored data, and activity priorities are managed in Health Connect settings.
 - Generates `health-data-YYYY-MM-DD.json` using the Persian/Jalali date and includes an unambiguous Gregorian date in the JSON.
 - Creates or reuses `Auto: Health Data` in Google Drive using the narrow `drive.file` scope.
 - Updates an existing daily file instead of creating duplicates.
@@ -26,7 +26,7 @@ The app never writes to Health Connect, never stores raw sensor samples, and has
 - Android SDK 36
 - Android 9 (API 28) or newer test device
 - Health Connect (built into Android 14+, available as an app on compatible older versions)
-- Health Sync configured to write Huawei Health data into Health Connect
+- At least one health or wearable app writing data into Health Connect
 - A Google Cloud project with the Google Drive API enabled
 
 ## Google Cloud setup
@@ -76,14 +76,13 @@ Sections with no meaningful source data are omitted:
     "activity": {
         "exerciseMinutes": 52,
         "distanceKm": 6.3,
-        "activeCalories": 418.0,
         "workouts": [{ "type": "walking", "durationMinutes": 50 }]
     },
     "heart": { "resting": 61, "average": 72, "min": 48, "max": 137 },
     "sleep": {
         "bedTime": "01:14",
         "wakeTime": "08:42",
-        "totalMinutes": 448,
+        "totalMinutes": 429,
         "deepMinutes": 91,
         "lightMinutes": 240,
         "remMinutes": 78,

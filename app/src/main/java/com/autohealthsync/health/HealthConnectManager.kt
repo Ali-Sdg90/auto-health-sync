@@ -5,7 +5,6 @@ import androidx.health.connect.client.HealthConnectClient
 import androidx.health.connect.client.HealthConnectFeatures
 import androidx.health.connect.client.aggregate.AggregationResult
 import androidx.health.connect.client.permission.HealthPermission
-import androidx.health.connect.client.records.ActiveCaloriesBurnedRecord
 import androidx.health.connect.client.records.DistanceRecord
 import androidx.health.connect.client.records.ExerciseSessionRecord
 import androidx.health.connect.client.records.HeartRateRecord
@@ -18,7 +17,6 @@ import androidx.health.connect.client.request.AggregateRequest
 import androidx.health.connect.client.request.ReadRecordsRequest
 import androidx.health.connect.client.response.ReadRecordsResponse
 import androidx.health.connect.client.time.TimeRangeFilter
-import androidx.health.connect.client.records.metadata.DataOrigin
 import com.autohealthsync.model.ActivitySummary
 import com.autohealthsync.model.DailyHealthSummary
 import com.autohealthsync.model.HeartSummary
@@ -29,15 +27,12 @@ import com.autohealthsync.util.DateUtils
 import java.time.Duration
 import java.time.Instant
 import java.time.LocalDate
-import kotlin.math.max
-import kotlin.math.min
 import kotlin.math.round
 import kotlin.math.roundToLong
 import kotlin.reflect.KClass
 
 class HealthConnectManager(private val context: Context) {
     private val providerPackageName = "com.google.android.apps.healthdata"
-    private val preferredOrigin = setOf(DataOrigin(HEALTH_SYNC_PACKAGE))
 
     val sdkStatus: Int
         get() = HealthConnectClient.getSdkStatus(context, providerPackageName)
@@ -51,7 +46,6 @@ class HealthConnectManager(private val context: Context) {
     val foregroundPermissions: Set<String> = setOf(
         HealthPermission.getReadPermission(StepsRecord::class),
         HealthPermission.getReadPermission(DistanceRecord::class),
-        HealthPermission.getReadPermission(ActiveCaloriesBurnedRecord::class),
         HealthPermission.getReadPermission(ExerciseSessionRecord::class),
         HealthPermission.getReadPermission(HeartRateRecord::class),
         HealthPermission.getReadPermission(RestingHeartRateRecord::class),
@@ -91,10 +85,8 @@ class HealthConnectManager(private val context: Context) {
                 metrics = setOf(
                     StepsRecord.COUNT_TOTAL,
                     DistanceRecord.DISTANCE_TOTAL,
-                    ActiveCaloriesBurnedRecord.ACTIVE_CALORIES_TOTAL,
                 ),
                 timeRangeFilter = TimeRangeFilter.between(start, end),
-                dataOriginFilter = preferredOrigin,
             ),
         )
         val workouts = readAll(ExerciseSessionRecord::class, start, end)
@@ -128,11 +120,13 @@ class HealthConnectManager(private val context: Context) {
         }
         val exerciseMinutes = workouts.sumOf { it.durationMinutes }.takeIf { workouts.isNotEmpty() }
         val distance = aggregates[DistanceRecord.DISTANCE_TOTAL]?.inKilometers?.rounded(2)
-        val calories = aggregates[ActiveCaloriesBurnedRecord.ACTIVE_CALORIES_TOTAL]
-            ?.inKilocalories?.rounded(1)
 
-        if (exerciseMinutes == null && distance == null && calories == null) return null
-        return ActivitySummary(exerciseMinutes, distance, calories, workouts)
+        if (exerciseMinutes == null && distance == null) return null
+        return ActivitySummary(
+            exerciseMinutes = exerciseMinutes,
+            distanceKm = distance,
+            workouts = workouts,
+        )
     }
 
     private fun buildHeart(
@@ -166,17 +160,20 @@ class HealthConnectManager(private val context: Context) {
                 .takeIf { matching.isNotEmpty() }
         }
 
+        val awakeMinutes = stageMinutes(
+            SleepSessionRecord.STAGE_TYPE_AWAKE,
+            SleepSessionRecord.STAGE_TYPE_AWAKE_IN_BED,
+        )
+        val sessionMinutes = Duration.between(session.startTime, session.endTime).toMinutes()
+
         return SleepSummary(
             bedTime = DateUtils.formatTime(session.startTime),
             wakeTime = DateUtils.formatTime(session.endTime),
-            totalMinutes = Duration.between(session.startTime, session.endTime).toMinutes(),
+            totalMinutes = netSleepMinutes(sessionMinutes, awakeMinutes),
             deepMinutes = stageMinutes(SleepSessionRecord.STAGE_TYPE_DEEP),
             lightMinutes = stageMinutes(SleepSessionRecord.STAGE_TYPE_LIGHT),
             remMinutes = stageMinutes(SleepSessionRecord.STAGE_TYPE_REM),
-            awakeMinutes = stageMinutes(
-                SleepSessionRecord.STAGE_TYPE_AWAKE,
-                SleepSessionRecord.STAGE_TYPE_AWAKE_IN_BED,
-            ),
+            awakeMinutes = awakeMinutes,
         )
     }
 
@@ -201,7 +198,6 @@ class HealthConnectManager(private val context: Context) {
                 ReadRecordsRequest(
                     recordType = recordType,
                     timeRangeFilter = TimeRangeFilter.between(start, end),
-                    dataOriginFilter = preferredOrigin,
                     pageToken = pageToken,
                 ),
             )
@@ -227,12 +223,12 @@ class HealthConnectManager(private val context: Context) {
         else -> "exercise_$type"
     }
 
-    companion object {
-        const val HEALTH_SYNC_PACKAGE = "nl.appyhapps.healthsync"
-    }
 }
 
 class HealthPermissionRequiredException : SecurityException("Health Connect permission required")
+
+internal fun netSleepMinutes(sessionMinutes: Long, awakeMinutes: Long?): Long =
+    (sessionMinutes - (awakeMinutes ?: 0L)).coerceAtLeast(0L)
 
 private fun Double.rounded(decimals: Int): Double {
     val scale = when (decimals) {

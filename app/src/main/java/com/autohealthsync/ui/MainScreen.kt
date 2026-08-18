@@ -14,11 +14,13 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -48,15 +50,18 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.autohealthsync.BuildConfig
 import com.autohealthsync.model.ActivityEntry
 import com.autohealthsync.model.ActivitySeverity
 import com.autohealthsync.model.ConnectionState
@@ -105,37 +110,23 @@ fun MainScreen(
                 )
             }
             item { SourceNotice() }
-            item {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(
-                        Icons.Rounded.History,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.size(21.dp),
-                    )
-                    Spacer(Modifier.width(10.dp))
-                    Text(
-                        "Recent activity",
-                        style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.SemiBold,
-                    )
-                    Spacer(Modifier.weight(1f))
-                    Text(
-                        "Latest ${state.appState.recentActivity.size}",
-                        style = MaterialTheme.typography.labelMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                }
-            }
-            if (state.appState.recentActivity.isEmpty()) {
-                item { EmptyActivity() }
-            } else {
-                items(state.appState.recentActivity, key = { it.id }) { entry ->
-                    ActivityRow(entry)
-                }
-            }
+            item { RecentActivitySection(state.appState.recentActivity) }
+            item { AppFooter() }
         }
     }
+}
+
+@Composable
+private fun AppFooter() {
+    Text(
+        text = "v${BuildConfig.VERSION_NAME} · Created by A.S.",
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(top = 8.dp),
+        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.72f),
+        style = MaterialTheme.typography.labelMedium,
+        textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+    )
 }
 
 @Composable
@@ -161,7 +152,8 @@ private fun AppHeader() {
                 modifier = Modifier
                     .align(Alignment.BottomEnd)
                     .padding(5.dp)
-                    .size(14.dp),
+                    .size(14.dp)
+                    .rotate(90f),
             )
         }
         Spacer(Modifier.width(15.dp))
@@ -394,33 +386,83 @@ private fun SourceNotice() {
         )
         Spacer(Modifier.width(10.dp))
         Text(
-            "Only data written by Health Sync is included. Phone-recorded steps and raw sensor samples stay out of your backup.",
+            "Data is read from all sources available in Health Connect. Manage connected apps and stored data in Health Connect settings.",
             style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onTertiaryContainer,
+            color = Color.White,
         )
     }
 }
 
 @Composable
-private fun EmptyActivity() {
-    Card(
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer),
-        shape = RoundedCornerShape(20.dp),
-    ) {
-        Column(
-            Modifier
-                .fillMaxWidth()
-                .padding(24.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-        ) {
+private fun RecentActivitySection(entries: List<ActivityEntry>) {
+    val listState = rememberLazyListState()
+    val newestEntryId = entries.firstOrNull()?.id
+
+    LaunchedEffect(newestEntryId) {
+        if (newestEntryId != null) listState.animateScrollToItem(0)
+    }
+
+    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
             Icon(
-                Icons.Rounded.Info,
+                Icons.Rounded.History,
                 contentDescription = null,
-                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                tint = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.size(21.dp),
             )
-            Spacer(Modifier.height(8.dp))
-            Text("Your backup activity will appear here", color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Spacer(Modifier.width(10.dp))
+            Text(
+                "Recent activity",
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.SemiBold,
+            )
+            Spacer(Modifier.weight(1f))
+            Text(
+                "Latest ${entries.size}",
+                style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
         }
+
+        Card(
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer),
+            shape = RoundedCornerShape(22.dp),
+        ) {
+            if (entries.isEmpty()) {
+                EmptyActivity()
+            } else {
+                LazyColumn(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(320.dp),
+                    state = listState,
+                    contentPadding = PaddingValues(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(14.dp),
+                ) {
+                    items(entries, key = { it.id }) { entry ->
+                        ActivityRow(entry)
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun EmptyActivity() {
+    Column(
+        Modifier
+            .fillMaxWidth()
+            .padding(24.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        Icon(
+            Icons.Rounded.Info,
+            contentDescription = null,
+            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+        Spacer(Modifier.height(8.dp))
+        Text("Your backup activity will appear here", color = MaterialTheme.colorScheme.onSurfaceVariant)
     }
 }
 
@@ -445,7 +487,14 @@ private fun ActivityRow(entry: ActivityEntry) {
                 .background(tint.copy(alpha = 0.12f)),
             contentAlignment = Alignment.Center,
         ) {
-            Icon(icon, contentDescription = null, tint = tint, modifier = Modifier.size(18.dp))
+            Icon(
+                icon,
+                contentDescription = null,
+                tint = tint,
+                modifier = Modifier
+                    .size(18.dp)
+                    .offset(y = if (entry.severity == ActivitySeverity.ERROR) 1.dp else 0.dp),
+            )
         }
         Spacer(Modifier.width(12.dp))
         Column(Modifier.weight(1f)) {

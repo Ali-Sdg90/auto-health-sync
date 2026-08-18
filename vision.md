@@ -68,14 +68,10 @@ This is a single-user utility and should remain local-first.
 
 The application reads health information from **Android Health Connect**.
 
-The expected external data pipeline is:
+The data pipeline is:
 
 ```text
-Huawei Watch
-    ↓
-Huawei Health
-    ↓
-Health Sync
+Health and wearable apps
     ↓
 Health Connect
     ↓
@@ -84,9 +80,9 @@ Auto Health Sync
 Google Drive
 ```
 
-Health Sync and Huawei Health are external dependencies and are **outside the scope of this project**.
+Health and wearable source apps are external dependencies and are **outside the scope of this project**.
 
-This application must never attempt to communicate directly with the Huawei watch or Huawei Health.
+This application must never attempt to communicate directly with a wearable or its source app.
 
 The app should only read from Health Connect.
 
@@ -129,7 +125,6 @@ A typical file should look similar to:
     "activity": {
         "exerciseMinutes": 52,
         "distanceKm": 6.3,
-        "activeCalories": 418,
         "workouts": [
             {
                 "type": "walking",
@@ -148,7 +143,7 @@ A typical file should look similar to:
     "sleep": {
         "bedTime": "01:14",
         "wakeTime": "08:42",
-        "totalMinutes": 428,
+        "totalMinutes": 429,
         "deepMinutes": 91,
         "lightMinutes": 240,
         "remMinutes": 78,
@@ -174,11 +169,9 @@ If Health Connect does not contain a meaningful value for an optional metric, om
 
 Store the daily step count.
 
-The desired source is the **Huawei wearable data transferred through Health Sync**, not steps independently recorded by the phone.
+Use the Health Connect aggregate so activity-source priority and deduplication configured by the user are respected.
 
-Use Health Connect data-origin information and device metadata where available to avoid mixing unrelated phone step sources into the result.
-
-Do not blindly aggregate step records from every application in Health Connect.
+Do not apply an application-specific data-origin filter. Source permissions, stored data, and priorities belong to Health Connect settings.
 
 ---
 
@@ -188,7 +181,6 @@ Preserve useful daily activity summary information:
 
 - Exercise minutes
 - Distance
-- Active calories
 - Workout sessions
 - Workout type
 - Workout duration
@@ -860,7 +852,7 @@ Implement the project incrementally.
 - Read actual Health Connect records.
 - Build the daily summary.
 - Display/debug the resulting summary locally.
-- Verify step data origin.
+- Verify that step totals reflect the Health Connect source configuration.
 
 ## Phase 2 — JSON
 
@@ -969,7 +961,7 @@ Version 1 is complete when:
 4. Backup Now generates a real daily health JSON and uploads it.
 5. One small file exists per day.
 6. Important health summaries are correct.
-7. Phone-originated step data is not unintentionally mixed into the desired wearable step count.
+7. Step totals reflect the data sources and priorities configured by the user in Health Connect.
 8. Automatic backup runs around 23:00 Asia/Tehran.
 9. Temporary failures are retried approximately every three minutes, up to five retries.
 10. Final failure generates a notification.

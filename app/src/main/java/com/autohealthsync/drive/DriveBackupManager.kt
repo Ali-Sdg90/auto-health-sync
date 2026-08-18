@@ -10,7 +10,6 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
-import okhttp3.Headers
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.MultipartBody
 import okhttp3.OkHttpClient
@@ -149,14 +148,8 @@ class DriveBackupManager(
         }.toString()
         val body = MultipartBody.Builder()
             .setType("multipart/related".toMediaType())
-            .addPart(
-                Headers.headersOf("Content-Type", "application/json; charset=UTF-8"),
-                metadata.toRequestBody(JSON_MEDIA_TYPE),
-            )
-            .addPart(
-                Headers.headersOf("Content-Type", JSON_MIME_TYPE),
-                contents.toRequestBody(JSON_MEDIA_TYPE),
-            )
+            .addPart(metadata.toRequestBody(JSON_MEDIA_TYPE))
+            .addPart(contents.toRequestBody(JSON_MEDIA_TYPE))
             .build()
         val request = Request.Builder()
             .url("$UPLOAD_BASE/files?uploadType=multipart&fields=id%2Cname")

@@ -17,7 +17,6 @@ data class DailyHealthSummary(
 data class ActivitySummary(
     val exerciseMinutes: Long? = null,
     val distanceKm: Double? = null,
-    val activeCalories: Double? = null,
     val workouts: List<WorkoutSummary> = emptyList(),
 )
 
@@ -51,4 +50,3 @@ data class SpO2Summary(
     val average: Double,
     val min: Double,
 )
-

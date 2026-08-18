@@ -27,6 +27,7 @@ class DailyHealthSummarySerializationTest {
         assertFalse(encoded.contains("steps"))
         assertFalse(encoded.contains("resting"))
         assertFalse(encoded.contains("spo2"))
+        assertFalse(encoded.contains("activeCalories"))
         assertTrue(encoded.contains("\"average\":72"))
     }
 }
