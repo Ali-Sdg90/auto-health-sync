@@ -1,0 +1,29 @@
+{
+    // Editor
+    "editor.tabSize": 4,
+    "editor.insertSpaces": true,
+    "editor.wordWrap": "off",
+    "editor.formatOnSave": true,
+
+    // Files
+    "files.eol": "\n",
+    "files.trimTrailingWhitespace": true,
+    "files.insertFinalNewline": true,
+
+    // Terminal
+    "terminal.integrated.defaultProfile.windows": "Git Bash",
+
+    // Git
+    "git.autofetch": true,
+    "git.confirmSync": false,
+
+    // UI
+    "workbench.experimental.modernUI": false,
+
+    "workbench.colorCustomizations": {
+        "titleBar.activeBackground": "#854510a1",
+        "titleBar.activeForeground": "#FFF7ED",
+        "titleBar.inactiveBackground": "#85451073",
+        "titleBar.inactiveForeground": "#D9C7B8"
+    }
+}
