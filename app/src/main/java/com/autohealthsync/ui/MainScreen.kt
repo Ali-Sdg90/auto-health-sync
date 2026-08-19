@@ -5,6 +5,9 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -26,31 +29,47 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowForward
 import androidx.compose.material.icons.rounded.Check
+import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material.icons.rounded.Cloud
+import androidx.compose.material.icons.rounded.CalendarMonth
 import androidx.compose.material.icons.rounded.ErrorOutline
 import androidx.compose.material.icons.rounded.Favorite
+import androidx.compose.material.icons.rounded.Folder
 import androidx.compose.material.icons.rounded.HealthAndSafety
 import androidx.compose.material.icons.rounded.History
 import androidx.compose.material.icons.rounded.Info
 import androidx.compose.material.icons.rounded.Refresh
 import androidx.compose.material.icons.rounded.Schedule
+import androidx.compose.material.icons.rounded.Settings
 import androidx.compose.material.icons.rounded.Shield
 import androidx.compose.material.icons.rounded.Sync
 import androidx.compose.material.icons.rounded.WarningAmber
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.TimePicker
+import androidx.compose.material3.rememberTimePickerState
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -59,12 +78,16 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.autohealthsync.BuildConfig
 import com.autohealthsync.model.ActivityEntry
 import com.autohealthsync.model.ActivitySeverity
+import com.autohealthsync.model.BackupSettings
 import com.autohealthsync.model.ConnectionState
+import com.autohealthsync.model.FileDateSystem
+import com.autohealthsync.model.MAX_DRIVE_FOLDER_NAME_LENGTH
 import com.autohealthsync.util.DateUtils
 import java.time.Instant
 import java.time.LocalDate
@@ -76,9 +99,14 @@ fun MainScreen(
     state: MainUiState,
     onHealthConnect: () -> Unit,
     onDriveConnect: () -> Unit,
+    onOpenHealthConnect: () -> Unit,
+    onOpenGoogleDrive: () -> Unit,
     onBackupNow: () -> Unit,
+    onSaveSettings: (BackupSettings) -> Unit,
     contentPadding: PaddingValues = PaddingValues(),
 ) {
+    var settingsVisible by remember { mutableStateOf(false) }
+
     Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
         LazyColumn(
             modifier = Modifier.fillMaxSize(),
@@ -90,13 +118,16 @@ fun MainScreen(
             ),
             verticalArrangement = Arrangement.spacedBy(18.dp),
         ) {
-            item { AppHeader() }
+            item { AppHeader(onSettingsClick = { settingsVisible = true }) }
             item {
                 ConnectionsCard(
                     healthState = state.healthState,
                     driveState = state.driveState,
+                    driveFolderName = state.appState.backupSettings.driveFolderName,
                     onHealthConnect = onHealthConnect,
                     onDriveConnect = onDriveConnect,
+                    onOpenHealthConnect = onOpenHealthConnect,
+                    onOpenGoogleDrive = onOpenGoogleDrive,
                 )
             }
             item { ScheduleCard(state) }
@@ -114,6 +145,17 @@ fun MainScreen(
             item { AppFooter() }
         }
     }
+
+    if (settingsVisible) {
+        SettingsSheet(
+            settings = state.appState.backupSettings,
+            onDismiss = { settingsVisible = false },
+            onSave = {
+                onSaveSettings(it)
+                settingsVisible = false
+            },
+        )
+    }
 }
 
 @Composable
@@ -125,12 +167,220 @@ private fun AppFooter() {
             .padding(top = 8.dp),
         color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.72f),
         style = MaterialTheme.typography.labelMedium,
-        textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+        textAlign = TextAlign.Center,
     )
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun AppHeader() {
+private fun SettingsSheet(
+    settings: BackupSettings,
+    onDismiss: () -> Unit,
+    onSave: (BackupSettings) -> Unit,
+) {
+    var backupHour by remember(settings.backupHour) { mutableStateOf(settings.backupHour) }
+    var backupMinute by remember(settings.backupMinute) { mutableStateOf(settings.backupMinute) }
+    var folderName by remember(settings.driveFolderName) { mutableStateOf(settings.driveFolderName) }
+    var dateSystem by remember(settings.fileDateSystem) { mutableStateOf(settings.fileDateSystem) }
+    var timePickerVisible by remember { mutableStateOf(false) }
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+
+    ModalBottomSheet(
+        onDismissRequest = onDismiss,
+        sheetState = sheetState,
+        containerColor = MaterialTheme.colorScheme.surface,
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .verticalScroll(rememberScrollState())
+                .padding(start = 22.dp, end = 22.dp, bottom = 28.dp),
+            verticalArrangement = Arrangement.spacedBy(18.dp),
+        ) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Column(Modifier.weight(1f)) {
+                    Text("Settings", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
+                    Text(
+                        "Shape how your daily backup is saved",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+                IconButton(onClick = onDismiss) {
+                    Icon(Icons.Rounded.Close, contentDescription = "Close settings")
+                }
+            }
+
+            Text("SCHEDULE", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary)
+            SettingsActionCard(
+                icon = Icons.Rounded.Schedule,
+                title = "Automatic backup",
+                value = "%02d:%02d".format(backupHour, backupMinute),
+                onClick = { timePickerVisible = true },
+            )
+
+            Text("GOOGLE DRIVE", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary)
+            OutlinedTextField(
+                value = folderName,
+                onValueChange = { folderName = it.take(MAX_DRIVE_FOLDER_NAME_LENGTH) },
+                modifier = Modifier.fillMaxWidth(),
+                label = { Text("Backup folder name") },
+                leadingIcon = { Icon(Icons.Rounded.Folder, contentDescription = null) },
+                supportingText = {
+                    Text(
+                        if (folderName.isBlank()) {
+                            "Enter a folder name"
+                        } else {
+                            "Backups will be stored in this Drive folder"
+                        },
+                    )
+                },
+                isError = folderName.isBlank(),
+                singleLine = true,
+                shape = RoundedCornerShape(16.dp),
+            )
+
+            Text("FILE DATE", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary)
+            Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                DateSystemCard(
+                    title = "Jalali",
+                    example = DateUtils.jalaliDate(LocalDate.now(DateUtils.HEALTH_ZONE)),
+                    selected = dateSystem == FileDateSystem.JALALI,
+                    modifier = Modifier.weight(1f),
+                    onClick = { dateSystem = FileDateSystem.JALALI },
+                )
+                DateSystemCard(
+                    title = "Gregorian",
+                    example = DateUtils.gregorianDate(LocalDate.now(DateUtils.HEALTH_ZONE)),
+                    selected = dateSystem == FileDateSystem.GREGORIAN,
+                    modifier = Modifier.weight(1f),
+                    onClick = { dateSystem = FileDateSystem.GREGORIAN },
+                )
+            }
+
+            Button(
+                onClick = {
+                    onSave(
+                        BackupSettings(
+                            backupHour = backupHour,
+                            backupMinute = backupMinute,
+                            driveFolderName = folderName,
+                            fileDateSystem = dateSystem,
+                        ),
+                    )
+                },
+                enabled = folderName.isNotBlank(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(54.dp),
+                shape = RoundedCornerShape(17.dp),
+            ) {
+                Text("Save settings", fontWeight = FontWeight.SemiBold)
+            }
+        }
+    }
+
+    if (timePickerVisible) {
+        val timePickerState = rememberTimePickerState(
+            initialHour = backupHour,
+            initialMinute = backupMinute,
+            is24Hour = true,
+        )
+        AlertDialog(
+            onDismissRequest = { timePickerVisible = false },
+            title = { Text("Automatic backup time") },
+            text = { TimePicker(state = timePickerState) },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        backupHour = timePickerState.hour
+                        backupMinute = timePickerState.minute
+                        timePickerVisible = false
+                    },
+                ) { Text("Set time") }
+            },
+            dismissButton = {
+                TextButton(onClick = { timePickerVisible = false }) { Text("Cancel") }
+            },
+        )
+    }
+}
+
+@Composable
+private fun SettingsActionCard(
+    icon: ImageVector,
+    title: String,
+    value: String,
+    onClick: () -> Unit,
+) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer),
+        shape = RoundedCornerShape(18.dp),
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(40.dp)
+                    .clip(CircleShape)
+                    .background(MaterialTheme.colorScheme.primaryContainer),
+                contentAlignment = Alignment.Center,
+            ) {
+                Icon(icon, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
+            }
+            Spacer(Modifier.width(13.dp))
+            Text(title, modifier = Modifier.weight(1f), style = MaterialTheme.typography.titleMedium)
+            Text(value, color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold)
+        }
+    }
+}
+
+@Composable
+private fun DateSystemCard(
+    title: String,
+    example: String,
+    selected: Boolean,
+    modifier: Modifier,
+    onClick: () -> Unit,
+) {
+    Card(
+        modifier = modifier.clickable(onClick = onClick),
+        colors = CardDefaults.cardColors(
+            containerColor = if (selected) {
+                MaterialTheme.colorScheme.primaryContainer
+            } else {
+                MaterialTheme.colorScheme.surfaceContainer
+            },
+        ),
+        shape = RoundedCornerShape(18.dp),
+    ) {
+        Column(Modifier.padding(14.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(
+                    Icons.Rounded.CalendarMonth,
+                    contentDescription = null,
+                    tint = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.size(19.dp),
+                )
+                Spacer(Modifier.weight(1f))
+                RadioButton(selected = selected, onClick = onClick, modifier = Modifier.size(22.dp))
+            }
+            Spacer(Modifier.height(10.dp))
+            Text(title, fontWeight = FontWeight.SemiBold)
+            Text(example, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        }
+    }
+}
+
+@Composable
+private fun AppHeader(onSettingsClick: () -> Unit) {
     Row(verticalAlignment = Alignment.CenterVertically) {
         Box(
             modifier = Modifier
@@ -157,7 +407,7 @@ private fun AppHeader() {
             )
         }
         Spacer(Modifier.width(15.dp))
-        Column {
+        Column(Modifier.weight(1f)) {
             Text(
                 "Auto Health Sync",
                 style = MaterialTheme.typography.headlineSmall,
@@ -170,6 +420,13 @@ private fun AppHeader() {
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
         }
+        IconButton(onClick = onSettingsClick) {
+            Icon(
+                Icons.Rounded.Settings,
+                contentDescription = "Settings",
+                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
     }
 }
 
@@ -177,8 +434,11 @@ private fun AppHeader() {
 private fun ConnectionsCard(
     healthState: ConnectionState,
     driveState: ConnectionState,
+    driveFolderName: String,
     onHealthConnect: () -> Unit,
     onDriveConnect: () -> Unit,
+    onOpenHealthConnect: () -> Unit,
+    onOpenGoogleDrive: () -> Unit,
 ) {
     Card(
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer),
@@ -190,15 +450,23 @@ private fun ConnectionsCard(
                 title = "Health Connect",
                 subtitle = "Read-only daily summaries",
                 state = healthState,
-                onClick = onHealthConnect,
+                onClick = if (healthState == ConnectionState.CONNECTED) {
+                    onOpenHealthConnect
+                } else {
+                    onHealthConnect
+                },
             )
             HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.55f))
             ConnectionRow(
                 icon = Icons.Rounded.Cloud,
                 title = "Google Drive",
-                subtitle = "Auto: Health Data",
+                subtitle = driveFolderName,
                 state = driveState,
-                onClick = onDriveConnect,
+                onClick = if (driveState == ConnectionState.CONNECTED) {
+                    onOpenGoogleDrive
+                } else {
+                    onDriveConnect
+                },
             )
         }
     }
@@ -244,7 +512,10 @@ private fun ConnectionRow(
 private fun ConnectionStatus(state: ConnectionState, onClick: () -> Unit) {
     when (state) {
         ConnectionState.CHECKING -> CircularProgressIndicator(Modifier.size(22.dp), strokeWidth = 2.dp)
-        ConnectionState.CONNECTED -> Row(verticalAlignment = Alignment.CenterVertically) {
+        ConnectionState.CONNECTED -> TextButton(
+            onClick = onClick,
+            contentPadding = PaddingValues(horizontal = 8.dp),
+        ) {
             Box(
                 Modifier
                     .size(8.dp)
@@ -493,7 +764,16 @@ private fun ActivityRow(entry: ActivityEntry) {
                 tint = tint,
                 modifier = Modifier
                     .size(18.dp)
-                    .offset(y = if (entry.severity == ActivitySeverity.ERROR) 1.dp else 0.dp),
+                    .offset(
+                        y = if (
+                            entry.severity == ActivitySeverity.ERROR ||
+                            entry.severity == ActivitySeverity.WARNING
+                        ) {
+                            (-1).dp
+                        } else {
+                            0.dp
+                        },
+                    ),
             )
         }
         Spacer(Modifier.width(12.dp))

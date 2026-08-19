@@ -11,7 +11,10 @@ import com.autohealthsync.backup.BackupTrigger
 import com.autohealthsync.drive.AuthorizationOutcome
 import com.autohealthsync.model.ActivitySeverity
 import com.autohealthsync.model.AppState
+import com.autohealthsync.model.BackupSettings
 import com.autohealthsync.model.ConnectionState
+import com.autohealthsync.model.localTime
+import com.autohealthsync.model.normalized
 import com.autohealthsync.util.DateUtils
 import java.time.Instant
 import kotlinx.coroutines.channels.Channel
@@ -48,7 +51,9 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             driveState = drive,
             isBackingUp = backingUp,
             operationStatus = text,
-            nextBackupEpochMillis = DateUtils.nextBackup().toInstant().toEpochMilli(),
+            nextBackupEpochMillis = DateUtils.nextBackup(state.backupSettings.localTime())
+                .toInstant()
+                .toEpochMilli(),
         )
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), MainUiState())
 
@@ -146,6 +151,25 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
+    fun openHealthConnect() {
+        viewModelScope.launch { eventChannel.send(UiEvent.OpenHealthConnect) }
+    }
+
+    fun openGoogleDrive() {
+        viewModelScope.launch {
+            eventChannel.send(UiEvent.OpenGoogleDrive(container.stateStore.current().driveFolderId))
+        }
+    }
+
+    fun saveSettings(settings: BackupSettings) {
+        viewModelScope.launch {
+            val normalized = settings.normalized()
+            container.stateStore.setBackupSettings(normalized)
+            container.backupScheduler.rescheduleNextBackup(normalized)
+            eventChannel.send(UiEvent.Message("Settings saved"))
+        }
+    }
+
     fun backupNow() {
         if (isBackingUp.value) return
         viewModelScope.launch {
@@ -199,4 +223,6 @@ sealed interface UiEvent {
     data class Message(val text: String) : UiEvent
     data object RequestHealthPermissions : UiEvent
     data object OpenHealthConnectStore : UiEvent
+    data object OpenHealthConnect : UiEvent
+    data class OpenGoogleDrive(val folderId: String?) : UiEvent
 }

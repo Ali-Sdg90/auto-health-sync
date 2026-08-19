@@ -6,19 +6,47 @@ import androidx.work.ExistingWorkPolicy
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
 import com.autohealthsync.util.DateUtils
+import com.autohealthsync.model.BackupSettings
+import com.autohealthsync.model.localTime
+import com.autohealthsync.storage.AppStateStore
 import java.time.Clock
 import java.time.Duration
 import java.time.LocalDate
 import java.util.concurrent.TimeUnit
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.launch
 
 class BackupScheduler(
     context: Context,
+    private val stateStore: AppStateStore,
     private val clock: Clock = Clock.systemUTC(),
 ) {
     private val workManager = WorkManager.getInstance(context)
+    private val schedulerScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
     fun ensureNextBackupScheduled() {
-        val next = DateUtils.nextBackup(clock)
+        scheduleNextBackup(stateStore = stateStore, policy = ExistingWorkPolicy.KEEP)
+    }
+
+    fun rescheduleNextBackup(settings: BackupSettings) {
+        schedulerScope.launch {
+            // The selected time can move the next run to another date, so remove the old tagged
+            // request before enqueueing its replacement rather than relying only on its work name.
+            workManager.cancelAllWorkByTag(TAG_SCHEDULED)
+            enqueueNextBackup(settings, ExistingWorkPolicy.REPLACE)
+        }
+    }
+
+    private fun scheduleNextBackup(stateStore: AppStateStore, policy: ExistingWorkPolicy) {
+        schedulerScope.launch {
+            enqueueNextBackup(stateStore.current().backupSettings, policy)
+        }
+    }
+
+    private fun enqueueNextBackup(settings: BackupSettings, policy: ExistingWorkPolicy) {
+        val next = DateUtils.nextBackup(settings.localTime(), clock)
         val delay = Duration.between(java.time.Instant.now(clock), next.toInstant())
             .coerceAtLeast(Duration.ZERO)
         val date = next.toLocalDate()
@@ -34,7 +62,7 @@ class BackupScheduler(
             .build()
         workManager.enqueueUniqueWork(
             "scheduled-backup-$date",
-            ExistingWorkPolicy.KEEP,
+            policy,
             request,
         )
     }
@@ -67,4 +95,3 @@ class BackupScheduler(
 
 private fun Duration.coerceAtLeast(minimum: Duration): Duration =
     if (this < minimum) minimum else this
-

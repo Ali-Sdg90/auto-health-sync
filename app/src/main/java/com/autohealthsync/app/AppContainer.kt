@@ -17,7 +17,7 @@ class AppContainer(context: Context) {
     val driveAuthorizationManager = DriveAuthorizationManager(appContext)
     val driveBackupManager = DriveBackupManager(driveAuthorizationManager, stateStore)
     val notifications = BackupNotificationManager(appContext)
-    val backupScheduler = BackupScheduler(appContext)
+    val backupScheduler = BackupScheduler(appContext, stateStore)
     val backupCoordinator = BackupCoordinator(
         healthManager,
         driveBackupManager,
@@ -25,4 +25,3 @@ class AppContainer(context: Context) {
         notifications,
     )
 }
-

@@ -8,6 +8,7 @@ import java.time.LocalTime
 import java.time.ZoneId
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
+import com.autohealthsync.model.FileDateSystem
 import kotlin.math.floor
 
 object DateUtils {
@@ -22,9 +23,11 @@ object DateUtils {
         date.atStartOfDay(HEALTH_ZONE).toInstant() to
             date.plusDays(1).atStartOfDay(HEALTH_ZONE).toInstant()
 
-    fun nextBackup(clock: Clock = Clock.systemUTC()): ZonedDateTime {
+    fun nextBackup(clock: Clock = Clock.systemUTC()): ZonedDateTime = nextBackup(BACKUP_TIME, clock)
+
+    fun nextBackup(backupTime: LocalTime, clock: Clock = Clock.systemUTC()): ZonedDateTime {
         val now = ZonedDateTime.now(clock.withZone(HEALTH_ZONE))
-        val todayAtBackup = now.toLocalDate().atTime(BACKUP_TIME).atZone(HEALTH_ZONE)
+        val todayAtBackup = now.toLocalDate().atTime(backupTime).atZone(HEALTH_ZONE)
         return if (now.isBefore(todayAtBackup)) todayAtBackup else todayAtBackup.plusDays(1)
     }
 
@@ -38,7 +41,13 @@ object DateUtils {
         return "%04d-%02d-%02d".format(jalali.year, jalali.month, jalali.day)
     }
 
-    fun fileName(date: LocalDate): String = "health-data-${jalaliDate(date)}.json"
+    fun fileName(date: LocalDate, dateSystem: FileDateSystem = FileDateSystem.JALALI): String {
+        val formattedDate = when (dateSystem) {
+            FileDateSystem.JALALI -> jalaliDate(date)
+            FileDateSystem.GREGORIAN -> gregorianDate(date)
+        }
+        return "health-data-$formattedDate.json"
+    }
 
     fun recoveryDates(today: LocalDate): List<LocalDate> =
         listOf(today.minusDays(2), today.minusDays(1))

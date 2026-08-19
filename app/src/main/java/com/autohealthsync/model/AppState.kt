@@ -1,5 +1,6 @@
 package com.autohealthsync.model
 
+import java.time.LocalTime
 import kotlinx.serialization.Serializable
 
 @Serializable
@@ -10,7 +11,36 @@ data class AppState(
     val successfulDates: Set<String> = emptySet(),
     val driveFileIds: Map<String, String> = emptyMap(),
     val recentActivity: List<ActivityEntry> = emptyList(),
+    val backupSettings: BackupSettings = BackupSettings(),
 )
+
+@Serializable
+data class BackupSettings(
+    val backupHour: Int = 23,
+    val backupMinute: Int = 0,
+    val driveFolderName: String = DEFAULT_DRIVE_FOLDER_NAME,
+    val fileDateSystem: FileDateSystem = FileDateSystem.JALALI,
+)
+
+@Serializable
+enum class FileDateSystem {
+    JALALI,
+    GREGORIAN,
+}
+
+const val DEFAULT_DRIVE_FOLDER_NAME = "Auto: Health Data"
+const val MAX_DRIVE_FOLDER_NAME_LENGTH = 100
+
+fun BackupSettings.normalized(): BackupSettings = copy(
+    backupHour = backupHour.coerceIn(0, 23),
+    backupMinute = backupMinute.coerceIn(0, 59),
+    driveFolderName = driveFolderName.trim()
+        .take(MAX_DRIVE_FOLDER_NAME_LENGTH)
+        .ifBlank { DEFAULT_DRIVE_FOLDER_NAME },
+)
+
+fun BackupSettings.localTime(): LocalTime =
+    LocalTime.of(backupHour.coerceIn(0, 23), backupMinute.coerceIn(0, 59))
 
 @Serializable
 data class ActivityEntry(
@@ -35,4 +65,3 @@ enum class ConnectionState {
     ACTION_REQUIRED,
     UNAVAILABLE,
 }
-

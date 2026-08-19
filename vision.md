@@ -14,13 +14,13 @@ The application should remain small, understandable, maintainable, and reliable.
 
 ## Core Goal
 
-Every night at approximately **23:00 Asia/Tehran time**, the application should:
+Every night at the user-selected time, defaulting to **23:00 Asia/Tehran time**, the application should:
 
 1. Read the important health information for the current day from Health Connect.
 2. Reduce the data into a small daily summary.
 3. Generate one JSON file for that day.
 4. Upload the file to Google Drive.
-5. Store it inside a folder named:
+5. Store it inside a user-configurable folder whose default name is:
 
 `Auto: Health Data`
 
@@ -121,6 +121,7 @@ A typical file should look similar to:
     "dateGregorian": "2026-08-18",
 
     "steps": 8432,
+    "weight": 78.4,
 
     "activity": {
         "exerciseMinutes": 52,
@@ -237,6 +238,14 @@ If no meaningful SpO2 data exists for that day, omit the section.
 
 ---
 
+## Weight
+
+If available, store the latest valid weight recorded during the day as a single top-level `weight` value in kilograms.
+
+If no weight was recorded for that day, keep the field and store `"weight": null`.
+
+---
+
 # Date and Time
 
 Use:
@@ -249,7 +258,7 @@ as the application's health-day timezone.
 
 Daily boundaries, filenames, displayed backup dates, and scheduled backup calculations should use this timezone.
 
-Use the Persian/Jalali date for filenames:
+Allow the user to choose Persian/Jalali or Gregorian dates for filenames. Jalali is the default:
 
 ```text
 health-data-1405-05-27.json
@@ -263,7 +272,7 @@ Do not use Jalali dates internally for timestamp calculations.
 
 # Automatic Daily Backup
 
-Schedule one automatic backup for approximately:
+Schedule one automatic backup for the user-selected time, defaulting to approximately:
 
 ```text
 23:00 Asia/Tehran
@@ -277,7 +286,7 @@ The backup does not need second-level timing accuracy.
 
 Android may delay background work slightly because of operating-system scheduling, battery state, Doze, or other restrictions.
 
-Reliability is more important than exact execution at `23:00:00`.
+Reliability is more important than exact execution at the selected minute.
 
 Do not introduce Exact Alarm permissions or unnecessary background services simply to achieve exact clock timing.
 
@@ -465,7 +474,7 @@ scope rather than broad access to the entire Google Drive.
 After authorization:
 
 1. Look for the application's Drive folder if already known/created by the app.
-2. Otherwise create:
+2. Otherwise create the configured folder, defaulting to:
 
 ```text
 Auto: Health Data
@@ -702,7 +711,7 @@ Avoid:
 - Complex animations
 - Decorative graphics with no purpose
 - Bottom navigation with only one meaningful destination
-- Unnecessary settings screens
+- Settings unrelated to backup behavior
 - Dashboard clutter
 
 This is a utility, not a lifestyle health application.
@@ -858,13 +867,13 @@ Implement the project incrementally.
 
 - Define the compact daily schema.
 - Serialize the summary.
-- Generate Jalali filenames.
+- Generate user-selected Jalali or Gregorian filenames.
 - Confirm correct day boundaries and sleep association.
 
 ## Phase 3 — Google Drive
 
 - Implement Google authorization.
-- Create/find `Auto: Health Data`.
+- Create/find the configured Drive folder, defaulting to `Auto: Health Data`.
 - Upload JSON.
 - Update an existing daily file instead of duplicating it.
 - Handle authorization failures cleanly.
@@ -877,7 +886,7 @@ Implement the project incrementally.
 
 ## Phase 5 — Automation
 
-- Implement approximately-23:00 daily scheduling.
+- Implement configurable daily scheduling with a 23:00 default.
 - Add retry behavior.
 - Add two-day missing-backup recovery.
 - Ensure scheduling survives normal process/device lifecycle events.
@@ -957,12 +966,12 @@ Version 1 is complete when:
 
 1. The user can connect Health Connect.
 2. The user can authorize Google Drive.
-3. `Auto: Health Data` is created or reused.
+3. The configured Drive folder is created or reused.
 4. Backup Now generates a real daily health JSON and uploads it.
 5. One small file exists per day.
 6. Important health summaries are correct.
 7. Step totals reflect the data sources and priorities configured by the user in Health Connect.
-8. Automatic backup runs around 23:00 Asia/Tehran.
+8. Automatic backup runs around the selected time, defaulting to 23:00 Asia/Tehran.
 9. Temporary failures are retried approximately every three minutes, up to five retries.
 10. Final failure generates a notification.
 11. Only the previous two days are checked for missing backups.

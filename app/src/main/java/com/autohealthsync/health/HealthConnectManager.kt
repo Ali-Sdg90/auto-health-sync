@@ -13,6 +13,7 @@ import androidx.health.connect.client.records.Record
 import androidx.health.connect.client.records.RestingHeartRateRecord
 import androidx.health.connect.client.records.SleepSessionRecord
 import androidx.health.connect.client.records.StepsRecord
+import androidx.health.connect.client.records.WeightRecord
 import androidx.health.connect.client.request.AggregateRequest
 import androidx.health.connect.client.request.ReadRecordsRequest
 import androidx.health.connect.client.response.ReadRecordsResponse
@@ -51,6 +52,7 @@ class HealthConnectManager(private val context: Context) {
         HealthPermission.getReadPermission(RestingHeartRateRecord::class),
         HealthPermission.getReadPermission(SleepSessionRecord::class),
         HealthPermission.getReadPermission(OxygenSaturationRecord::class),
+        HealthPermission.getReadPermission(WeightRecord::class),
     )
 
     val backgroundReadAvailable: Boolean
@@ -93,6 +95,7 @@ class HealthConnectManager(private val context: Context) {
         val heartRates = readAll(HeartRateRecord::class, start, end)
         val restingRates = readAll(RestingHeartRateRecord::class, start, end)
         val oxygen = readAll(OxygenSaturationRecord::class, start, end)
+        val weights = readAll(WeightRecord::class, start, end)
         val sleep = readSleepForWakeDate(date, start, end)
 
         return DailyHealthSummary(
@@ -103,6 +106,7 @@ class HealthConnectManager(private val context: Context) {
             heart = buildHeart(heartRates, restingRates),
             sleep = sleep,
             spo2 = buildSpO2(oxygen),
+            weight = latestWeight(weights),
         )
     }
 
@@ -185,6 +189,14 @@ class HealthConnectManager(private val context: Context) {
             min = values.min().rounded(1),
         )
     }
+
+    private fun latestWeight(records: List<WeightRecord>): Double? =
+        records
+            .filter { it.weight.inKilograms > 0.0 }
+            .maxByOrNull { it.time }
+            ?.weight
+            ?.inKilograms
+            ?.rounded(2)
 
     private suspend fun <T : Record> readAll(
         recordType: KClass<T>,

@@ -21,6 +21,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.core.content.ContextCompat
 import androidx.core.net.toUri
 import androidx.health.connect.client.PermissionController
+import androidx.health.connect.client.HealthConnectClient
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
@@ -67,6 +68,8 @@ class MainActivity : ComponentActivity() {
                             )
                             UiEvent.RequestHealthPermissions -> healthLauncher.launch(viewModel.healthPermissions)
                             UiEvent.OpenHealthConnectStore -> openHealthConnectStore()
+                            UiEvent.OpenHealthConnect -> openHealthConnect()
+                            is UiEvent.OpenGoogleDrive -> openGoogleDrive(event.folderId)
                         }
                     }
                 }
@@ -81,7 +84,10 @@ class MainActivity : ComponentActivity() {
                         state = state,
                         onHealthConnect = viewModel::requestHealthConnection,
                         onDriveConnect = viewModel::requestDriveConnection,
+                        onOpenHealthConnect = viewModel::openHealthConnect,
+                        onOpenGoogleDrive = viewModel::openGoogleDrive,
                         onBackupNow = viewModel::backupNow,
+                        onSaveSettings = viewModel::saveSettings,
                         contentPadding = padding,
                     )
                 }
@@ -94,5 +100,28 @@ class MainActivity : ComponentActivity() {
         val web = "https://play.google.com/store/apps/details?id=com.google.android.apps.healthdata".toUri()
         runCatching { startActivity(Intent(Intent.ACTION_VIEW, market)) }
             .onFailure { startActivity(Intent(Intent.ACTION_VIEW, web)) }
+    }
+
+    private fun openHealthConnect() {
+        runCatching {
+            startActivity(HealthConnectClient.getHealthConnectManageDataIntent(this))
+        }.onFailure {
+            openHealthConnectStore()
+        }
+    }
+
+    private fun openGoogleDrive(folderId: String?) {
+        val uri = if (folderId == null) {
+            "https://drive.google.com/drive/my-drive".toUri()
+        } else {
+            "https://drive.google.com/drive/folders/$folderId".toUri()
+        }
+        val driveIntent = Intent(Intent.ACTION_VIEW, uri).setPackage(GOOGLE_DRIVE_PACKAGE)
+        runCatching { startActivity(driveIntent) }
+            .onFailure { startActivity(Intent(Intent.ACTION_VIEW, uri)) }
+    }
+
+    companion object {
+        private const val GOOGLE_DRIVE_PACKAGE = "com.google.android.apps.docs"
     }
 }

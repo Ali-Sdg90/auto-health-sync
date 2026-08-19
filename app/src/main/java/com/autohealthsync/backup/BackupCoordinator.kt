@@ -6,6 +6,7 @@ import com.autohealthsync.drive.DriveBackupManager
 import com.autohealthsync.health.HealthConnectManager
 import com.autohealthsync.health.HealthPermissionRequiredException
 import com.autohealthsync.model.ActivitySeverity
+import com.autohealthsync.model.BackupSettings
 import com.autohealthsync.notification.BackupNotificationManager
 import com.autohealthsync.storage.AppStateStore
 import com.autohealthsync.util.DateUtils
@@ -26,7 +27,7 @@ class BackupCoordinator(
     private val json = Json {
         prettyPrint = true
         encodeDefaults = false
-        explicitNulls = false
+        explicitNulls = true
     }
 
     suspend fun run(trigger: BackupTrigger, date: LocalDate = DateUtils.today(clock)): BackupOutcome {
@@ -36,8 +37,9 @@ class BackupCoordinator(
         )
         return try {
             validateAccess(trigger)
-            recoverMissingDays(date)
-            val result = backupDate(date)
+            val settings = stateStore.current().backupSettings
+            recoverMissingDays(date, settings)
+            val result = backupDate(date, settings)
             stateStore.addActivity(
                 ActivitySeverity.SUCCESS,
                 "Backup completed",
@@ -76,27 +78,27 @@ class BackupCoordinator(
         if (!drive.isAuthorized()) throw DriveAuthorizationRequiredException()
     }
 
-    private suspend fun recoverMissingDays(today: LocalDate) {
+    private suspend fun recoverMissingDays(today: LocalDate, settings: BackupSettings) {
         for (date in DateUtils.recoveryDates(today)) {
-            val fileName = DateUtils.fileName(date)
+            val fileName = DateUtils.fileName(date, settings.fileDateSystem)
             val localSuccess = date.toString() in stateStore.current().successfulDates
             val remoteExists = localSuccess && drive.hasBackup(date, fileName)
             if (localSuccess && remoteExists) continue
 
             stateStore.addActivity(ActivitySeverity.INFO, "Missing backup found", fileName)
-            val result = backupDate(date)
+            val result = backupDate(date, settings)
             stateStore.addActivity(ActivitySeverity.SUCCESS, "Missing backup recovered", result.fileName)
             notifications.notifyRecovered(result.fileName)
         }
     }
 
-    private suspend fun backupDate(date: LocalDate): DateBackupResult {
+    private suspend fun backupDate(date: LocalDate, settings: BackupSettings): DateBackupResult {
         stateStore.addActivity(ActivitySeverity.INFO, "Reading Health Connect", date.toString())
         val summary = health.readDailySummary(date)
         val contents = json.encodeToString(summary)
-        val fileName = DateUtils.fileName(date)
+        val fileName = DateUtils.fileName(date, settings.fileDateSystem)
         stateStore.addActivity(ActivitySeverity.INFO, "Uploading to Google Drive", fileName)
-        val upload = drive.upload(date, fileName, contents)
+        val upload = drive.upload(date, fileName, contents, settings.driveFolderName)
         stateStore.markBackedUp(date, upload.fileId)
         return DateBackupResult(fileName, upload.updatedExisting)
     }

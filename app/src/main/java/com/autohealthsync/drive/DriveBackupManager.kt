@@ -42,13 +42,14 @@ class DriveBackupManager(
         date: LocalDate,
         fileName: String,
         contents: String,
+        folderName: String,
     ): DriveUploadResult = withContext(Dispatchers.IO) {
         val token = when (val outcome = authorizationManager.authorize()) {
             is AuthorizationOutcome.Authorized -> outcome.accessToken
             is AuthorizationOutcome.UserActionRequired -> throw DriveAuthorizationRequiredException()
             is AuthorizationOutcome.Unavailable -> throw DriveAuthorizationRequiredException(outcome.reason)
         }
-        val folderId = ensureFolder(token)
+        val folderId = ensureFolder(token, folderName)
         val state = stateStore.current()
         val storedFileId = state.driveFileIds[date.toString()]
         val existingFileId = storedFileId?.takeIf { fileExists(token, it) }
@@ -63,15 +64,15 @@ class DriveBackupManager(
         DriveUploadResult(fileId, existingFileId != null)
     }
 
-    private suspend fun ensureFolder(token: String): String {
+    private suspend fun ensureFolder(token: String, folderName: String): String {
         val state = stateStore.current()
         state.driveFolderId?.let { id ->
             if (fileExists(token, id)) return id
             stateStore.setDriveFolderId(null)
         }
 
-        val existing = findFile(token, FOLDER_NAME, parentId = null, mimeType = FOLDER_MIME_TYPE)
-        val folderId = existing?.id ?: createFolder(token).id
+        val existing = findFile(token, folderName, parentId = null, mimeType = FOLDER_MIME_TYPE)
+        val folderId = existing?.id ?: createFolder(token, folderName).id
         stateStore.setDriveFolderId(folderId)
         return folderId
     }
@@ -122,9 +123,9 @@ class DriveBackupManager(
         }
     }
 
-    private fun createFolder(token: String): DriveFile {
+    private fun createFolder(token: String, folderName: String): DriveFile {
         val metadata = buildJsonObject {
-            put("name", FOLDER_NAME)
+            put("name", folderName)
             put("mimeType", FOLDER_MIME_TYPE)
         }.toString()
         val request = Request.Builder()
@@ -182,7 +183,6 @@ class DriveBackupManager(
     }
 
     companion object {
-        const val FOLDER_NAME = "Auto: Health Data"
         private const val FOLDER_MIME_TYPE = "application/vnd.google-apps.folder"
         private const val JSON_MIME_TYPE = "application/json"
         private const val API_BASE = "https://www.googleapis.com/drive/v3"

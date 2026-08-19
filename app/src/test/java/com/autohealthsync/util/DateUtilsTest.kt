@@ -1,5 +1,6 @@
 package com.autohealthsync.util
 
+import com.autohealthsync.model.FileDateSystem
 import java.time.Clock
 import java.time.Instant
 import java.time.LocalDate
@@ -21,6 +22,14 @@ class DateUtilsTest {
     }
 
     @Test
+    fun `file name can use Gregorian date`() {
+        assertEquals(
+            "health-data-2026-08-18.json",
+            DateUtils.fileName(LocalDate.of(2026, 8, 18), FileDateSystem.GREGORIAN),
+        )
+    }
+
+    @Test
     fun `next backup uses Tehran and rolls after 23`() {
         val before = Clock.fixed(Instant.parse("2026-08-18T18:00:00Z"), ZoneOffset.UTC)
         val after = Clock.fixed(Instant.parse("2026-08-18T20:00:00Z"), ZoneOffset.UTC)
@@ -31,10 +40,19 @@ class DateUtilsTest {
     }
 
     @Test
+    fun `next backup respects a custom time`() {
+        val clock = Clock.fixed(Instant.parse("2026-08-18T08:00:00Z"), ZoneOffset.UTC)
+        val next = DateUtils.nextBackup(java.time.LocalTime.of(14, 30), clock)
+
+        assertEquals(LocalDate.of(2026, 8, 18), next.toLocalDate())
+        assertEquals(14, next.hour)
+        assertEquals(30, next.minute)
+    }
+
+    @Test
     fun `recovery window contains exactly the prior two days`() {
         val dates = DateUtils.recoveryDates(LocalDate.of(2026, 8, 18))
         assertEquals(listOf(LocalDate.of(2026, 8, 16), LocalDate.of(2026, 8, 17)), dates)
         assertFalse(LocalDate.of(2026, 8, 15) in dates)
     }
 }
-

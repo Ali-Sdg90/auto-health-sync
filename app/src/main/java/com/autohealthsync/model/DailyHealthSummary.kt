@@ -7,6 +7,7 @@ data class DailyHealthSummary(
     val date: String,
     val dateGregorian: String,
     val steps: Long? = null,
+    val weight: Double?,
     val activity: ActivitySummary? = null,
     val heart: HeartSummary? = null,
     val sleep: SleepSummary? = null,

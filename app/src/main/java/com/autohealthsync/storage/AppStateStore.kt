@@ -9,6 +9,7 @@ import androidx.datastore.core.handlers.ReplaceFileCorruptionHandler
 import com.autohealthsync.model.ActivityEntry
 import com.autohealthsync.model.ActivitySeverity
 import com.autohealthsync.model.AppState
+import com.autohealthsync.model.BackupSettings
 import java.io.InputStream
 import java.io.OutputStream
 import java.time.Clock
@@ -50,6 +51,24 @@ class AppStateStore(
 
     suspend fun setDriveFolderId(folderId: String?) {
         dataStore.updateData { it.copy(driveFolderId = folderId) }
+    }
+
+    suspend fun setBackupSettings(settings: BackupSettings) {
+        dataStore.updateData { state ->
+            val backupLocationChanged =
+                state.backupSettings.driveFolderName != settings.driveFolderName ||
+                    state.backupSettings.fileDateSystem != settings.fileDateSystem
+            state.copy(
+                backupSettings = settings,
+                driveFolderId = if (state.backupSettings.driveFolderName != settings.driveFolderName) {
+                    null
+                } else {
+                    state.driveFolderId
+                },
+                successfulDates = if (backupLocationChanged) emptySet() else state.successfulDates,
+                driveFileIds = if (backupLocationChanged) emptyMap() else state.driveFileIds,
+            )
+        }
     }
 
     suspend fun markBackedUp(date: LocalDate, fileId: String) {

@@ -8,12 +8,13 @@ It follows one deliberately small pipeline:
 
 ## What version 1 does
 
-- Reads steps, distance, workouts, heart rate, resting heart rate, sleep, and SpO₂ from Health Connect.
+- Reads steps, distance, workouts, heart rate, resting heart rate, sleep, SpO₂, and the latest daily weight from Health Connect.
 - Reads all sources available through Health Connect; source permissions, stored data, and activity priorities are managed in Health Connect settings.
-- Generates `health-data-YYYY-MM-DD.json` using the Persian/Jalali date and includes an unambiguous Gregorian date in the JSON.
-- Creates or reuses `Auto: Health Data` in Google Drive using the narrow `drive.file` scope.
+- Generates `health-data-YYYY-MM-DD.json` using the user-selected Jalali or Gregorian filename date; the JSON always includes an unambiguous Gregorian date.
+- Creates or reuses a configurable Google Drive folder, defaulting to `Auto: Health Data`, using the narrow `drive.file` scope.
 - Updates an existing daily file instead of creating duplicates.
-- Runs around 23:00 in `Asia/Tehran`, survives process restarts through WorkManager, and repairs its next scheduled job whenever the app opens.
+- Runs at a configurable daily time (23:00 by default) in `Asia/Tehran`, survives process restarts through WorkManager, and repairs its next scheduled job whenever the app opens.
+- Opens Health Connect data management and the backup folder in Google Drive directly from their connected status controls.
 - Retries recoverable automatic failures five times at roughly three-minute intervals.
 - Checks only the previous two days for missing backups.
 - Keeps the latest 50 operational events locally and sends notifications only for final failures, access problems, and recovered missing days.
@@ -60,7 +61,7 @@ The debug APK is produced at `app/build/outputs/apk/debug/app-debug.apk`.
 2. Tap **Connect** beside Health Connect and grant all requested read permissions, including background access.
 3. Tap **Connect** beside Google Drive and authorize `drive.file` access.
 4. Tap **Backup now**.
-5. Confirm that `Auto: Health Data/health-data-<Jalali date>.json` exists in Drive and inspect Recent Activity in the app.
+5. Confirm that the configured Drive folder contains the dated JSON file and inspect Recent Activity in the app.
 
 Health Connect permissions can be revoked at any time. The app checks access before every operation and fails visibly rather than crashing or silently skipping a backup.
 
@@ -68,11 +69,14 @@ Health Connect permissions can be revoked at any time. The app checks access bef
 
 Sections with no meaningful source data are omitted:
 
+`weight` is the exception: it is always present and is `null` when no weight was recorded that day.
+
 ```json
 {
     "date": "1405-05-27",
     "dateGregorian": "2026-08-18",
     "steps": 8432,
+    "weight": 78.4,
     "activity": {
         "exerciseMinutes": 52,
         "distanceKm": 6.3,
@@ -96,7 +100,7 @@ Sections with no meaningful source data are omitted:
 
 - A Play Store release must complete Google's Health Connect declaration and provide a public privacy policy matching [PRIVACY.md](PRIVACY.md).
 - Register the release signing certificate SHA-1 as another Android OAuth client before testing the release build.
-- Battery optimization and Doze may delay the 23:00 run. This is intentional: WorkManager reliability is preferred over exact-alarm permissions.
+- Battery optimization and Doze may delay the selected run time. This is intentional: WorkManager reliability is preferred over exact-alarm permissions.
 - Real Health Connect and Drive behavior must be validated on a physical device. Unit tests cover deterministic date conversion, scheduling boundaries, the two-day recovery window, and omission of absent JSON metrics.
 
 For the complete product intent and constraints, see [vision.md](vision.md).
