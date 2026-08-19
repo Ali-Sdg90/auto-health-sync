@@ -76,6 +76,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.style.TextAlign
@@ -160,16 +161,21 @@ fun MainScreen(
 
 @Composable
 private fun AppFooter() {
+    val uriHandler = LocalUriHandler.current
     Text(
         text = "v${BuildConfig.VERSION_NAME} · Created by A.S.",
         modifier = Modifier
             .fillMaxWidth()
-            .padding(top = 8.dp),
+            .clip(RoundedCornerShape(12.dp))
+            .clickable { uriHandler.openUri(CREATOR_GITHUB_URL) }
+            .padding(top = 8.dp, bottom = 8.dp),
         color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.72f),
         style = MaterialTheme.typography.labelMedium,
         textAlign = TextAlign.Center,
     )
 }
+
+private const val CREATOR_GITHUB_URL = "https://github.com/Ali-Sdg90"
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -200,11 +206,7 @@ private fun SettingsSheet(
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Column(Modifier.weight(1f)) {
                     Text("Settings", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
-                    Text(
-                        "Shape how your daily backup is saved",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
+                    Spacer(Modifier.height(24.dp))
                 }
                 IconButton(onClick = onDismiss) {
                     Icon(Icons.Rounded.Close, contentDescription = "Close settings")
@@ -415,9 +417,12 @@ private fun AppHeader(onSettingsClick: () -> Unit) {
                 letterSpacing = (-0.4).sp,
             )
             Text(
-                "Quietly backing up your day",
-                style = MaterialTheme.typography.bodyMedium,
+                "Daily Health data backups to Google Drive",
+                style = MaterialTheme.typography.bodySmall,
+                fontSize = 11.sp,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
+                maxLines = 1,
+                softWrap = false,
             )
         }
         IconButton(onClick = onSettingsClick) {
@@ -444,7 +449,7 @@ private fun ConnectionsCard(
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer),
         shape = RoundedCornerShape(24.dp),
     ) {
-        Column(Modifier.padding(horizontal = 18.dp, vertical = 8.dp)) {
+        Column(Modifier.padding(vertical = 8.dp)) {
             ConnectionRow(
                 icon = Icons.Rounded.HealthAndSafety,
                 title = "Health Connect",
@@ -456,7 +461,10 @@ private fun ConnectionsCard(
                     onHealthConnect
                 },
             )
-            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.55f))
+            HorizontalDivider(
+                modifier = Modifier.padding(horizontal = 18.dp),
+                color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.55f),
+            )
             ConnectionRow(
                 icon = Icons.Rounded.Cloud,
                 title = "Google Drive",
@@ -483,7 +491,8 @@ private fun ConnectionRow(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 14.dp),
+            .clickable(onClick = onClick)
+            .padding(horizontal = 18.dp, vertical = 14.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Box(
@@ -504,17 +513,17 @@ private fun ConnectionRow(
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
         }
-        ConnectionStatus(state = state, onClick = onClick)
+        ConnectionStatus(state = state)
     }
 }
 
 @Composable
-private fun ConnectionStatus(state: ConnectionState, onClick: () -> Unit) {
+private fun ConnectionStatus(state: ConnectionState) {
     when (state) {
         ConnectionState.CHECKING -> CircularProgressIndicator(Modifier.size(22.dp), strokeWidth = 2.dp)
-        ConnectionState.CONNECTED -> TextButton(
-            onClick = onClick,
-            contentPadding = PaddingValues(horizontal = 8.dp),
+        ConnectionState.CONNECTED -> Row(
+            modifier = Modifier.padding(horizontal = 8.dp, vertical = 12.dp),
+            verticalAlignment = Alignment.CenterVertically,
         ) {
             Box(
                 Modifier
@@ -527,7 +536,10 @@ private fun ConnectionStatus(state: ConnectionState, onClick: () -> Unit) {
         }
         ConnectionState.ACTION_REQUIRED,
         ConnectionState.UNAVAILABLE,
-        -> TextButton(onClick = onClick, contentPadding = PaddingValues(horizontal = 10.dp)) {
+        -> Row(
+            modifier = Modifier.padding(horizontal = 10.dp, vertical = 12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
             Text(if (state == ConnectionState.UNAVAILABLE) "Install" else "Connect")
             Spacer(Modifier.width(3.dp))
             Icon(Icons.AutoMirrored.Rounded.ArrowForward, contentDescription = null, modifier = Modifier.size(16.dp))

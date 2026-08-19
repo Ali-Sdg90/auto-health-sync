@@ -1,6 +1,6 @@
-- [ ] Add setting for time of the auto backup, defaulting to 11:00 PM.
+- [x] Add setting for time of the auto backup, defaulting to 11:00 PM.
 
-- [ ] Add setting to allow user to choose between Jalali and Gregorian date in the backup file name.
+- [x] Add setting to allow user to choose between Jalali and Gregorian date in the backup file name.
 
 - [ ] Add Setting for choose which Health Connect data types to backup, defaulting to all available types.
 
@@ -12,9 +12,9 @@
 
 - [ ] Release the app on Bazaar and Myket and other places.
 
-- [ ] Add an “Open backup folder in Google Drive” action.
+- [x] Add an “Open backup folder in Google Drive” action.
 
-- [ ] Add an “Open Health Connect” action.
+- [x] Add an “Open Health Connect” action.
 
 - [ ] Add a first-run onboarding checklist for Health Connect, Drive, notifications, and background access.
 
