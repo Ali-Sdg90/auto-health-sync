@@ -2,6 +2,7 @@ package com.autohealthsync.backup
 
 import com.autohealthsync.model.DailyHealthSummary
 import com.autohealthsync.model.HeartSummary
+import com.autohealthsync.model.SleepSummary
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import org.junit.Assert.assertFalse
@@ -59,5 +60,44 @@ class DailyHealthSummarySerializationTest {
         )
 
         assertTrue(encoded.contains("\"steps\":5816,\"weight\":79.3"))
+    }
+
+    @Test
+    fun `nap is stored separately and included in total sleep`() {
+        val encoded = json.encodeToString(
+            DailyHealthSummary(
+                date = "1405-05-29",
+                dateGregorian = "2026-08-20",
+                weight = null,
+                sleep = SleepSummary(
+                    bedTime = "11:04",
+                    wakeTime = "16:37",
+                    totalMinutes = 465,
+                    napMinutes = 158,
+                    lightMinutes = 367,
+                    awakeMinutes = 26,
+                ),
+            ),
+        )
+
+        assertTrue(encoded.contains("\"totalMinutes\":465,\"napMinutes\":158"))
+    }
+
+    @Test
+    fun `nap field is omitted when no separate sleep session exists`() {
+        val encoded = json.encodeToString(
+            DailyHealthSummary(
+                date = "1405-05-28",
+                dateGregorian = "2026-08-19",
+                weight = null,
+                sleep = SleepSummary(
+                    bedTime = "03:12",
+                    wakeTime = "13:08",
+                    totalMinutes = 552,
+                ),
+            ),
+        )
+
+        assertFalse(encoded.contains("napMinutes"))
     }
 }

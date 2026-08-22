@@ -13,6 +13,7 @@ It follows one deliberately small pipeline:
 - Generates `health-data-YYYY-MM-DD.json` using the user-selected Jalali or Gregorian filename date; the JSON always includes an unambiguous Gregorian date.
 - Creates or reuses a configurable Google Drive folder, defaulting to `Auto: Health Data`, using the narrow `drive.file` scope.
 - Updates an existing daily file instead of creating duplicates.
+- Lets the user choose any report date from the main screen, defaulting to today, and requests Health Connect history access for older records.
 - Runs at a configurable daily time (23:00 by default) in `Asia/Tehran`, survives process restarts through WorkManager, and repairs its next scheduled job whenever the app opens.
 - Opens Health Connect data management and the backup folder in Google Drive directly from their connected status controls.
 - Retries recoverable automatic failures five times at roughly three-minute intervals.
@@ -58,9 +59,9 @@ The debug APK is produced at `app/build/outputs/apk/debug/app-debug.apk`.
 ## First-run checklist
 
 1. Open the app and allow backup-status notifications.
-2. Tap **Connect** beside Health Connect and grant all requested read permissions, including background access.
+2. Tap **Connect** beside Health Connect and grant all requested read permissions, including background and history access.
 3. Tap **Connect** beside Google Drive and authorize `drive.file` access.
-4. Tap **Backup now**.
+4. Keep **Report date** on today or choose a past date, then tap the backup button.
 5. Confirm that the configured Drive folder contains the dated JSON file and inspect Recent Activity in the app.
 
 Health Connect permissions can be revoked at any time. The app checks access before every operation and fails visibly rather than crashing or silently skipping a backup.
@@ -70,6 +71,8 @@ Health Connect permissions can be revoked at any time. The app checks access bef
 Sections with no meaningful source data are omitted:
 
 `weight` is the exception: it is always present and is `null` when no weight was recorded that day.
+
+When a day contains multiple distinct sleep sessions, total sleep and every available sleep-stage summary are summed across all sessions; overlapping duplicate records are counted only once.
 
 ```json
 {
@@ -86,7 +89,8 @@ Sections with no meaningful source data are omitted:
     "sleep": {
         "bedTime": "01:14",
         "wakeTime": "08:42",
-        "totalMinutes": 429,
+        "totalMinutes": 461,
+        "napMinutes": 32,
         "deepMinutes": 91,
         "lightMinutes": 240,
         "remMinutes": 78,

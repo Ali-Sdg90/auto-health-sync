@@ -87,6 +87,7 @@ class MainActivity : ComponentActivity() {
                         onOpenHealthConnect = viewModel::openHealthConnect,
                         onOpenGoogleDrive = viewModel::openGoogleDrive,
                         onBackupNow = viewModel::backupNow,
+                        onBackupDateChange = viewModel::selectBackupDate,
                         onSaveSettings = viewModel::saveSettings,
                         contentPadding = padding,
                     )

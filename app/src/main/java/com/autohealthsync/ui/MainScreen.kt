@@ -41,7 +41,6 @@ import androidx.compose.material.icons.rounded.Info
 import androidx.compose.material.icons.rounded.Refresh
 import androidx.compose.material.icons.rounded.Schedule
 import androidx.compose.material.icons.rounded.Settings
-import androidx.compose.material.icons.rounded.Shield
 import androidx.compose.material.icons.rounded.Sync
 import androidx.compose.material.icons.rounded.WarningAmber
 import androidx.compose.material3.Button
@@ -50,6 +49,8 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.DatePicker
+import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -58,11 +59,13 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.RadioButton
+import androidx.compose.material3.SelectableDates
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TimePicker
 import androidx.compose.material3.rememberTimePickerState
+import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -92,6 +95,7 @@ import com.autohealthsync.model.MAX_DRIVE_FOLDER_NAME_LENGTH
 import com.autohealthsync.util.DateUtils
 import java.time.Instant
 import java.time.LocalDate
+import java.time.ZoneOffset
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 
@@ -103,6 +107,7 @@ fun MainScreen(
     onOpenHealthConnect: () -> Unit,
     onOpenGoogleDrive: () -> Unit,
     onBackupNow: () -> Unit,
+    onBackupDateChange: (LocalDate) -> Unit,
     onSaveSettings: (BackupSettings) -> Unit,
     contentPadding: PaddingValues = PaddingValues(),
 ) {
@@ -125,10 +130,13 @@ fun MainScreen(
                     healthState = state.healthState,
                     driveState = state.driveState,
                     driveFolderName = state.appState.backupSettings.driveFolderName,
+                    selectedDate = state.selectedBackupDate,
+                    dateSelectionEnabled = !state.isBackingUp,
                     onHealthConnect = onHealthConnect,
                     onDriveConnect = onDriveConnect,
                     onOpenHealthConnect = onOpenHealthConnect,
                     onOpenGoogleDrive = onOpenGoogleDrive,
+                    onDateChange = onBackupDateChange,
                 )
             }
             item { ScheduleCard(state) }
@@ -141,7 +149,6 @@ fun MainScreen(
                     onBackupNow = onBackupNow,
                 )
             }
-            item { SourceNotice() }
             item { RecentActivitySection(state.appState.recentActivity) }
             item { AppFooter() }
         }
@@ -440,10 +447,13 @@ private fun ConnectionsCard(
     healthState: ConnectionState,
     driveState: ConnectionState,
     driveFolderName: String,
+    selectedDate: LocalDate,
+    dateSelectionEnabled: Boolean,
     onHealthConnect: () -> Unit,
     onDriveConnect: () -> Unit,
     onOpenHealthConnect: () -> Unit,
     onOpenGoogleDrive: () -> Unit,
+    onDateChange: (LocalDate) -> Unit,
 ) {
     Card(
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer),
@@ -475,6 +485,15 @@ private fun ConnectionsCard(
                 } else {
                     onDriveConnect
                 },
+            )
+            HorizontalDivider(
+                modifier = Modifier.padding(horizontal = 18.dp),
+                color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.55f),
+            )
+            ReportDateSelector(
+                selectedDate = selectedDate,
+                enabled = dateSelectionEnabled,
+                onDateChange = onDateChange,
             )
         }
     }
@@ -599,6 +618,113 @@ private fun ScheduleCard(state: MainUiState) {
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun ReportDateSelector(
+    selectedDate: LocalDate,
+    enabled: Boolean,
+    onDateChange: (LocalDate) -> Unit,
+) {
+    var datePickerVisible by remember { mutableStateOf(false) }
+    val today = LocalDate.now(DateUtils.HEALTH_ZONE)
+    val selectedDateText = when (selectedDate) {
+        today -> "Today · ${selectedDate.format(DateTimeFormatter.ofPattern("MMM d, yyyy"))}"
+        today.minusDays(1) -> "Yesterday · ${selectedDate.format(DateTimeFormatter.ofPattern("MMM d, yyyy"))}"
+        else -> selectedDate.format(DateTimeFormatter.ofPattern("MMM d, yyyy"))
+    }
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(enabled = enabled) { datePickerVisible = true }
+            .padding(horizontal = 18.dp, vertical = 14.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Box(
+            modifier = Modifier
+                .size(42.dp)
+                .clip(CircleShape)
+                .background(MaterialTheme.colorScheme.surfaceContainerHigh),
+            contentAlignment = Alignment.Center,
+        ) {
+            Icon(
+                Icons.Rounded.CalendarMonth,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.primary,
+            )
+        }
+        Spacer(Modifier.width(13.dp))
+        Column(Modifier.weight(1f)) {
+            Text(
+                "Report date",
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.SemiBold,
+            )
+            Text(
+                selectedDateText,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
+        Text(
+            "Change",
+            modifier = Modifier.padding(horizontal = 8.dp, vertical = 12.dp),
+            style = MaterialTheme.typography.labelLarge,
+            color = MaterialTheme.colorScheme.primary,
+        )
+    }
+
+    if (datePickerVisible) {
+        val todayUtcMillis = today.atStartOfDay(ZoneOffset.UTC).toInstant().toEpochMilli()
+        val pickerState = rememberDatePickerState(
+            initialSelectedDateMillis = selectedDate
+                .atStartOfDay(ZoneOffset.UTC)
+                .toInstant()
+                .toEpochMilli(),
+            selectableDates = remember(today) {
+                object : SelectableDates {
+                    override fun isSelectableDate(utcTimeMillis: Long): Boolean =
+                        utcTimeMillis <= todayUtcMillis
+
+                    override fun isSelectableYear(year: Int): Boolean = year <= today.year
+                }
+            },
+        )
+        DatePickerDialog(
+            onDismissRequest = { datePickerVisible = false },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        pickerState.selectedDateMillis?.let { millis ->
+                            onDateChange(
+                                Instant.ofEpochMilli(millis)
+                                    .atZone(ZoneOffset.UTC)
+                                    .toLocalDate(),
+                            )
+                        }
+                        datePickerVisible = false
+                    },
+                    enabled = pickerState.selectedDateMillis != null,
+                ) { Text("Use date") }
+            },
+            dismissButton = {
+                TextButton(onClick = { datePickerVisible = false }) { Text("Cancel") }
+            },
+        ) {
+            DatePicker(
+                state = pickerState,
+                title = {
+                    Text(
+                        "Choose report date",
+                        modifier = Modifier.padding(start = 24.dp, top = 16.dp),
+                    )
+                },
+                headline = null,
+                showModeToggle = false,
+            )
+        }
+    }
+}
+
 @Composable
 private fun BackupAction(
     isBackingUp: Boolean,
@@ -606,7 +732,10 @@ private fun BackupAction(
     enabled: Boolean,
     onBackupNow: () -> Unit,
 ) {
-    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+    Column(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
         Button(
             onClick = onBackupNow,
             enabled = enabled && !isBackingUp,
@@ -627,15 +756,18 @@ private fun BackupAction(
                     } else {
                         Icon(Icons.Rounded.Refresh, contentDescription = null, modifier = Modifier.size(21.dp))
                     }
-                    Spacer(Modifier.width(10.dp))
-                    Text(if (loading) "Backing up…" else "Backup now", fontWeight = FontWeight.SemiBold)
+                    Spacer(Modifier.width(6.dp))
+                    Text(
+                        if (loading) "Backing up…" else "Back up now",
+                        fontWeight = FontWeight.SemiBold,
+                    )
                 }
             }
         }
         AnimatedVisibility(status != null, enter = fadeIn(), exit = fadeOut()) {
             Text(
                 status.orEmpty(),
-                modifier = Modifier.padding(top = 9.dp),
+                modifier = Modifier.padding(top = 12.dp),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
@@ -643,36 +775,11 @@ private fun BackupAction(
         if (!enabled && !isBackingUp) {
             Text(
                 "Connect both services to enable backups",
-                modifier = Modifier.padding(top = 9.dp),
+                modifier = Modifier.padding(top = 12.dp),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
         }
-    }
-}
-
-@Composable
-private fun SourceNotice() {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(16.dp))
-            .background(MaterialTheme.colorScheme.tertiaryContainer.copy(alpha = 0.58f))
-            .padding(14.dp),
-        verticalAlignment = Alignment.Top,
-    ) {
-        Icon(
-            Icons.Rounded.Shield,
-            contentDescription = null,
-            tint = MaterialTheme.colorScheme.tertiary,
-            modifier = Modifier.size(19.dp),
-        )
-        Spacer(Modifier.width(10.dp))
-        Text(
-            "Data is read from all sources available in Health Connect. Manage connected apps and stored data in Health Connect settings.",
-            style = MaterialTheme.typography.bodySmall,
-            color = Color.White,
-        )
     }
 }
 

@@ -34,11 +34,14 @@ class BackupCoordinator(
         stateStore.addActivity(
             ActivitySeverity.INFO,
             if (trigger == BackupTrigger.MANUAL) "Manual backup started" else "Scheduled backup started",
+            date.toString(),
         )
         return try {
             validateAccess(trigger)
             val settings = stateStore.current().backupSettings
-            recoverMissingDays(date, settings)
+            if (date == DateUtils.today(clock)) {
+                recoverMissingDays(date, settings)
+            }
             val result = backupDate(date, settings)
             stateStore.addActivity(
                 ActivitySeverity.SUCCESS,

@@ -17,6 +17,8 @@ import com.autohealthsync.model.localTime
 import com.autohealthsync.model.normalized
 import com.autohealthsync.util.DateUtils
 import java.time.Instant
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -31,6 +33,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     private val driveStatus = MutableStateFlow(ConnectionState.CHECKING)
     private val isBackingUp = MutableStateFlow(false)
     private val statusText = MutableStateFlow<String?>(null)
+    private val selectedBackupDate = MutableStateFlow(DateUtils.today())
     private val eventChannel = Channel<UiEvent>(Channel.BUFFERED)
 
     val healthPermissions: Set<String>
@@ -38,19 +41,25 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
     val events = eventChannel.receiveAsFlow()
 
+    private val backupActionState = combine(
+        isBackingUp,
+        statusText,
+        selectedBackupDate,
+    ) { backingUp, text, date -> BackupActionState(backingUp, text, date) }
+
     val uiState = combine(
         container.stateStore.state,
         healthStatus,
         driveStatus,
-        isBackingUp,
-        statusText,
-    ) { state, health, drive, backingUp, text ->
+        backupActionState,
+    ) { state, health, drive, backupAction ->
         MainUiState(
             appState = state,
             healthState = health,
             driveState = drive,
-            isBackingUp = backingUp,
-            operationStatus = text,
+            isBackingUp = backupAction.isBackingUp,
+            operationStatus = backupAction.status,
+            selectedBackupDate = backupAction.date,
             nextBackupEpochMillis = DateUtils.nextBackup(state.backupSettings.localTime())
                 .toInstant()
                 .toEpochMilli(),
@@ -67,7 +76,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             healthStatus.value = ConnectionState.CHECKING
             healthStatus.value = when {
                 !container.healthManager.isAvailable -> ConnectionState.UNAVAILABLE
-                container.healthManager.hasBackgroundAccess() -> ConnectionState.CONNECTED
+                container.healthManager.hasCompleteAccess() -> ConnectionState.CONNECTED
                 else -> ConnectionState.ACTION_REQUIRED
             }
 
@@ -134,7 +143,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 container.stateStore.addActivity(
                     ActivitySeverity.WARNING,
                     "Health permission missing",
-                    "Background backup requires all requested read permissions",
+                    "Backups require all requested read permissions",
                 )
                 eventChannel.send(UiEvent.Message("Health Connect access is incomplete"))
             }
@@ -173,14 +182,16 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     fun backupNow() {
         if (isBackingUp.value) return
         viewModelScope.launch {
+            val date = selectedBackupDate.value
+            val dateLabel = backupDateLabel(date)
             isBackingUp.value = true
-            statusText.value = "Collecting today's health summary…"
-            when (val outcome = container.backupCoordinator.run(BackupTrigger.MANUAL)) {
+            statusText.value = "Collecting the health summary for $dateLabel…"
+            when (val outcome = container.backupCoordinator.run(BackupTrigger.MANUAL, date)) {
                 is BackupOutcome.Success -> {
                     statusText.value = if (outcome.updatedExisting) {
-                        "Today's backup was updated"
+                        "Backup for $dateLabel was updated"
                     } else {
-                        "Today's backup is safe in Drive"
+                        "Backup for $dateLabel is safe in Drive"
                     }
                     eventChannel.send(UiEvent.Message("Backup completed: ${outcome.fileName}"))
                 }
@@ -202,10 +213,32 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
+    fun selectBackupDate(date: LocalDate) {
+        if (!date.isAfter(DateUtils.today())) {
+            selectedBackupDate.value = date
+            statusText.value = null
+        }
+    }
+
     private suspend fun onDriveConnected() {
         driveStatus.value = ConnectionState.CONNECTED
         container.stateStore.addActivity(ActivitySeverity.SUCCESS, "Google Drive connected")
         eventChannel.send(UiEvent.Message("Google Drive connected"))
+    }
+}
+
+private data class BackupActionState(
+    val isBackingUp: Boolean,
+    val status: String?,
+    val date: LocalDate,
+)
+
+private fun backupDateLabel(date: LocalDate): String {
+    val today = DateUtils.today()
+    return when (date) {
+        today -> "today"
+        today.minusDays(1) -> "yesterday"
+        else -> date.format(DateTimeFormatter.ofPattern("MMM d, yyyy"))
     }
 }
 
@@ -215,6 +248,7 @@ data class MainUiState(
     val driveState: ConnectionState = ConnectionState.CHECKING,
     val isBackingUp: Boolean = false,
     val operationStatus: String? = null,
+    val selectedBackupDate: LocalDate = DateUtils.today(),
     val nextBackupEpochMillis: Long = DateUtils.nextBackup().toInstant().toEpochMilli(),
 )
 

@@ -96,6 +96,8 @@ Request only the health permissions necessary for the data actually used by the 
 
 Also request Health Connect background-read access so scheduled backups can run without opening the app manually.
 
+Request Health Connect history-read access when the platform supports it so a manually selected report date is not limited to the default history window.
+
 If required Health Connect permissions are missing or revoked:
 
 - Do not crash.
@@ -144,7 +146,8 @@ A typical file should look similar to:
     "sleep": {
         "bedTime": "01:14",
         "wakeTime": "08:42",
-        "totalMinutes": 429,
+        "totalMinutes": 461,
+        "napMinutes": 32,
         "deepMinutes": 91,
         "lightMinutes": 240,
         "remMinutes": 78,
@@ -216,6 +219,7 @@ Preserve:
 - Bedtime
 - Wake time
 - Total sleep duration
+- Nap duration, when a separate sleep session exists
 - Deep sleep duration
 - Light sleep duration
 - REM sleep duration
@@ -224,6 +228,10 @@ Preserve:
 For a calendar day's health file, associate the sleep session with the day on which the user woke up.
 
 For example, sleep beginning late on August 17 and ending on the morning of August 18 belongs to the August 18 daily summary.
+
+When Health Connect contains multiple non-overlapping sleep sessions for the wake-up date, treat the longest session as the main sleep and the remaining sessions as naps. Exclude overlapping duplicate sessions, expose the combined nap duration as `napMinutes`, and include it in `totalMinutes`.
+
+Calculate `totalMinutes`, `deepMinutes`, `lightMinutes`, `remMinutes`, and `awakeMinutes` from the sum of all retained sleep sessions for that wake-up date.
 
 ---
 
@@ -505,14 +513,16 @@ Backup Now
 
 This is important for testing and diagnostics.
 
+Allow the user to select the report date next to this action. The default is always today, future dates are unavailable, and selecting a past date creates or updates only that date's file.
+
 Pressing it should trigger the same real backup pipeline used by automatic backups.
 
 It should:
 
 - Read real Health Connect data.
-- Generate today's JSON.
-- Upload/update today's file in Google Drive.
-- Check the two previous days for missing backups.
+- Generate the selected date's JSON.
+- Upload/update the selected date's file in Google Drive.
+- Check the two previous days for missing backups when the selected date is today.
 - Write useful Recent Activity entries.
 - Display success or failure in the UI.
 

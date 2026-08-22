@@ -40,6 +40,7 @@ data class SleepSummary(
     val bedTime: String,
     val wakeTime: String,
     val totalMinutes: Long,
+    val napMinutes: Long? = null,
     val deepMinutes: Long? = null,
     val lightMinutes: Long? = null,
     val remMinutes: Long? = null,

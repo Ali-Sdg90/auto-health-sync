@@ -60,11 +60,20 @@ class HealthConnectManager(private val context: Context) {
             HealthConnectFeatures.FEATURE_READ_HEALTH_DATA_IN_BACKGROUND,
         ) == HealthConnectFeatures.FEATURE_STATUS_AVAILABLE
 
+    val historyReadAvailable: Boolean
+        get() = isAvailable && client.features.getFeatureStatus(
+            HealthConnectFeatures.FEATURE_READ_HEALTH_DATA_HISTORY,
+        ) == HealthConnectFeatures.FEATURE_STATUS_AVAILABLE
+
     val requestedPermissions: Set<String>
-        get() = if (backgroundReadAvailable) {
-            foregroundPermissions + HealthPermission.PERMISSION_READ_HEALTH_DATA_IN_BACKGROUND
-        } else {
-            foregroundPermissions
+        get() = buildSet {
+            addAll(foregroundPermissions)
+            if (backgroundReadAvailable) {
+                add(HealthPermission.PERMISSION_READ_HEALTH_DATA_IN_BACKGROUND)
+            }
+            if (historyReadAvailable) {
+                add(HealthPermission.PERMISSION_READ_HEALTH_DATA_HISTORY)
+            }
         }
 
     suspend fun grantedPermissions(): Set<String> =
@@ -76,6 +85,10 @@ class HealthConnectManager(private val context: Context) {
     suspend fun hasBackgroundAccess(): Boolean =
         hasForegroundAccess() && backgroundReadAvailable &&
             HealthPermission.PERMISSION_READ_HEALTH_DATA_IN_BACKGROUND in grantedPermissions()
+
+    suspend fun hasCompleteAccess(): Boolean =
+        hasBackgroundAccess() && (!historyReadAvailable ||
+            HealthPermission.PERMISSION_READ_HEALTH_DATA_HISTORY in grantedPermissions())
 
     suspend fun readDailySummary(date: LocalDate): DailyHealthSummary {
         check(isAvailable) { "Health Connect is unavailable" }
@@ -154,30 +167,54 @@ class HealthConnectManager(private val context: Context) {
         dayEnd: Instant,
     ): SleepSummary? {
         val queryStart = DateUtils.dayBounds(date.minusDays(1)).first
-        val sessions = readAll(SleepSessionRecord::class, queryStart, dayEnd)
-            .filter { !it.endTime.isBefore(dayStart) && it.endTime.isBefore(dayEnd) }
-        val session = sessions.maxByOrNull { Duration.between(it.startTime, it.endTime) } ?: return null
+        val sessions = distinctNonOverlappingSleepSessions(
+            readAll(SleepSessionRecord::class, queryStart, dayEnd)
+                .filter { !it.endTime.isBefore(dayStart) && it.endTime.isBefore(dayEnd) },
+        ) { it.startTime to it.endTime }
+        val mainSession = sessions.maxByOrNull {
+            Duration.between(it.startTime, it.endTime)
+        } ?: return null
+        val napSessions = sessions.filter { it !== mainSession }
 
         fun stageMinutes(vararg types: Int): Long? {
-            val matching = session.stages.filter { it.stage in types }
-            return matching.sumOf { Duration.between(it.startTime, it.endTime).toMinutes() }
-                .takeIf { matching.isNotEmpty() }
+            val matching = sessions.flatMap { it.stages }.filter { it.stage in types }
+            return matching
+                .takeIf { it.isNotEmpty() }
+                ?.let { stages ->
+                    sumDurationMinutes(stages.map { it.startTime to it.endTime })
+                }
         }
 
-        val awakeMinutes = stageMinutes(
+        fun netMinutes(session: SleepSessionRecord): Long {
+            val awake = session.stages
+                .filter {
+                    it.stage == SleepSessionRecord.STAGE_TYPE_AWAKE ||
+                        it.stage == SleepSessionRecord.STAGE_TYPE_AWAKE_IN_BED
+                }
+                .sumOf { Duration.between(it.startTime, it.endTime).toMinutes() }
+                .takeIf { minutes -> minutes > 0L }
+            return netSleepMinutes(
+                Duration.between(session.startTime, session.endTime).toMinutes(),
+                awake,
+            )
+        }
+
+        val totalAwakeMinutes = stageMinutes(
             SleepSessionRecord.STAGE_TYPE_AWAKE,
             SleepSessionRecord.STAGE_TYPE_AWAKE_IN_BED,
         )
-        val sessionMinutes = Duration.between(session.startTime, session.endTime).toMinutes()
+        val napMinutes = napSessions.sumOf(::netMinutes).takeIf { napSessions.isNotEmpty() }
+        val totalMinutes = sumSleepMinutes(sessions.map(::netMinutes))
 
         return SleepSummary(
-            bedTime = DateUtils.formatTime(session.startTime),
-            wakeTime = DateUtils.formatTime(session.endTime),
-            totalMinutes = netSleepMinutes(sessionMinutes, awakeMinutes),
+            bedTime = DateUtils.formatTime(mainSession.startTime),
+            wakeTime = DateUtils.formatTime(mainSession.endTime),
+            totalMinutes = totalMinutes,
+            napMinutes = napMinutes,
             deepMinutes = stageMinutes(SleepSessionRecord.STAGE_TYPE_DEEP),
             lightMinutes = stageMinutes(SleepSessionRecord.STAGE_TYPE_LIGHT),
             remMinutes = stageMinutes(SleepSessionRecord.STAGE_TYPE_REM),
-            awakeMinutes = awakeMinutes,
+            awakeMinutes = totalAwakeMinutes,
         )
     }
 
@@ -241,6 +278,36 @@ class HealthPermissionRequiredException : SecurityException("Health Connect perm
 
 internal fun netSleepMinutes(sessionMinutes: Long, awakeMinutes: Long?): Long =
     (sessionMinutes - (awakeMinutes ?: 0L)).coerceAtLeast(0L)
+
+internal fun sumSleepMinutes(sessionMinutes: Iterable<Long>): Long = sessionMinutes.sum()
+
+internal fun sumDurationMinutes(ranges: Iterable<Pair<Instant, Instant>>): Long =
+    ranges.sumOf { (start, end) -> Duration.between(start, end).toMinutes() }
+
+internal fun <T> distinctNonOverlappingSleepSessions(
+    sessions: List<T>,
+    timeRange: (T) -> Pair<Instant, Instant>,
+): List<T> {
+    val selected = mutableListOf<T>()
+    sessions
+        .filter { session ->
+            val (start, end) = timeRange(session)
+            start < end
+        }
+        .sortedByDescending { session ->
+            val (start, end) = timeRange(session)
+            Duration.between(start, end)
+        }
+        .forEach { candidate ->
+            val (candidateStart, candidateEnd) = timeRange(candidate)
+            val overlapsSelected = selected.any { existing ->
+                val (existingStart, existingEnd) = timeRange(existing)
+                candidateStart < existingEnd && existingStart < candidateEnd
+            }
+            if (!overlapsSelected) selected += candidate
+        }
+    return selected.sortedBy { timeRange(it).first }
+}
 
 private fun Double.rounded(decimals: Int): Double {
     val scale = when (decimals) {
