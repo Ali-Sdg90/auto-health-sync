@@ -96,7 +96,7 @@ android {
 dependencies {
     // Latest stable AndroidX family that remains on the production API 36 toolchain.
     implementation(platform("androidx.compose:compose-bom:2026.06.00"))
-    implementation("androidx.core:core-ktx:1.17.0")
+    implementation("androidx.core:core-ktx:1.19.0")
     implementation("androidx.activity:activity-compose:1.11.0")
     implementation("androidx.compose.material3:material3")
     implementation("androidx.compose.material:material-icons-extended")
