@@ -36,6 +36,9 @@ jobs:
           cache-read-only: ${{ github.event_name == 'pull_request' }}
           validate-wrappers: true
 
+      - name: Make Gradle wrapper executable
+        run: chmod +x gradlew
+
       - name: Test, lint, and build all distributable variants
         run: ./gradlew --no-daemon --stacktrace testDebugUnitTest lintDebug assembleDebug assembleRelease bundleRelease
 
