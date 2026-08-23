@@ -4,9 +4,9 @@
 
 - [ ] Add Setting for choose which Health Connect data types to backup, defaulting to all available types.
 
-- [ ] Add CI/CD pipeline to build and test the app on every commit.
+- [x] Add CI/CD pipeline to build and test the app on every commit.
 
-- [ ] Add CI/CD pipeline to build, test, and publish signed APK/AAB artifacts.
+- [x] Add CI/CD pipeline to build, test, and publish signed APK/AAB artifacts.
 
 - [ ] Update app google cloud registration for the global release.
 

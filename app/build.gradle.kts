@@ -5,6 +5,35 @@ plugins {
     id("org.jetbrains.kotlin.plugin.serialization")
 }
 
+val appVersionName = providers.gradleProperty("APP_VERSION_NAME").get()
+val versionMatch = Regex("^(\\d+)\\.(\\d+)\\.(\\d+)$").matchEntire(appVersionName)
+    ?: error("APP_VERSION_NAME must use stable SemVer (for example, 1.4.0): $appVersionName")
+val (versionMajor, versionMinor, versionPatch) = versionMatch.destructured
+val versionMajorNumber = versionMajor.toLong()
+val versionMinorNumber = versionMinor.toLong()
+val versionPatchNumber = versionPatch.toLong()
+
+require(versionMinorNumber < 1_000 && versionPatchNumber < 1_000) {
+    "APP_VERSION_NAME minor and patch parts must each be below 1000: $appVersionName"
+}
+
+val calculatedVersionCode =
+    versionMajorNumber * 1_000_000L + versionMinorNumber * 1_000L + versionPatchNumber
+require(calculatedVersionCode in 1..Int.MAX_VALUE.toLong()) {
+    "APP_VERSION_NAME produces an invalid Android versionCode: $appVersionName"
+}
+
+val releaseKeystorePath = providers.environmentVariable("ANDROID_KEYSTORE_PATH")
+val releaseKeystorePassword = providers.environmentVariable("ANDROID_KEYSTORE_PASSWORD")
+val releaseKeyAlias = providers.environmentVariable("ANDROID_KEY_ALIAS")
+val releaseKeyPassword = providers.environmentVariable("ANDROID_KEY_PASSWORD")
+val hasReleaseSigning = listOf(
+    releaseKeystorePath,
+    releaseKeystorePassword,
+    releaseKeyAlias,
+    releaseKeyPassword,
+).all { it.isPresent }
+
 android {
     namespace = "com.autohealthsync"
     compileSdk = 36
@@ -13,15 +42,29 @@ android {
         applicationId = "com.autohealthsync"
         minSdk = 28
         targetSdk = 36
-        versionCode = 5
-        versionName = "1.4.0"
+        versionCode = calculatedVersionCode.toInt()
+        versionName = appVersionName
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables.useSupportLibrary = true
     }
 
+    signingConfigs {
+        if (hasReleaseSigning) {
+            create("release") {
+                storeFile = file(releaseKeystorePath.get())
+                storePassword = releaseKeystorePassword.get()
+                keyAlias = releaseKeyAlias.get()
+                keyPassword = releaseKeyPassword.get()
+            }
+        }
+    }
+
     buildTypes {
         release {
+            if (hasReleaseSigning) {
+                signingConfig = signingConfigs.getByName("release")
+            }
             isMinifyEnabled = true
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),

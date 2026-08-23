@@ -1,5 +1,8 @@
 # Auto Health Sync
 
+[![CI](https://github.com/Ali-Sdg90/auto-health-sync/actions/workflows/ci.yml/badge.svg)](https://github.com/Ali-Sdg90/auto-health-sync/actions/workflows/ci.yml)
+[![GitHub release](https://img.shields.io/github/v/release/Ali-Sdg90/auto-health-sync?display_name=tag&sort=semver)](https://github.com/Ali-Sdg90/auto-health-sync/releases)
+
 Auto Health Sync is a focused Android utility that creates one compact health summary per day from Health Connect and stores it in the user's Google Drive.
 
 It follows one deliberately small pipeline:
@@ -55,6 +58,20 @@ $env:ANDROID_HOME = "C:\Android" # adjust for your SDK
 ```
 
 The debug APK is produced at `app/build/outputs/apk/debug/app-debug.apk`.
+
+## CI/CD and releases
+
+Pull requests are tested, linted, and built by GitHub Actions. PR titles must use Conventional Commits because the repository uses squash merges and Release Please derives the next version and changelog from the resulting commit on `main`.
+
+- `fix(scope): ...` creates a patch release.
+- `feat(scope): ...` creates a minor release.
+- `feat(scope)!: ...` creates a breaking major release.
+- `perf(scope): ...` and `revert: ...` create a patch release.
+- `docs:`, `test:`, `ci:`, `build:`, `refactor:`, and `chore:` do not trigger a release by themselves.
+
+Release Please keeps a release PR current. Merging that PR creates a SemVer tag and GitHub Release. A separate protected workflow checks out that exact tag, repeats tests and release lint, builds signed APK and AAB files, verifies both signatures, generates SHA-256 checksums and build provenance, and uploads the assets to the GitHub Release.
+
+Maintainer setup, signing-secret names, branch rules, recovery instructions, and the complete release flow are documented in [docs/RELEASING.md](docs/RELEASING.md).
 
 ## First-run checklist
 
