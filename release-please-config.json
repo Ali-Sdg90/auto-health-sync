@@ -5,8 +5,12 @@
     ".": {
       "release-type": "simple",
       "package-name": "auto-health-sync",
+      "include-component-in-tag": false,
       "include-v-in-tag": true,
       "changelog-path": "CHANGELOG.md",
+      "pull-request-title-pattern": "chore${scope}: release${component} ${version}",
+      "pull-request-header": "## Production release\n\nThis pull request prepares the next production release of **Auto Health Sync**.\n\n### Review before merging\n\n- Confirm that all required CI checks pass.\n- Review the generated version and release notes.\n- Confirm that the release certificate SHA-1 is registered for Google Drive OAuth.",
+      "pull-request-footer": "### What happens after merge\n\nMerging this pull request creates the version tag and GitHub Release. The publication workflow then builds, verifies, attests, and uploads the signed APK and AAB artifacts.\n\n> This pull request is maintained automatically by [Release Please](https://github.com/googleapis/release-please).",
       "extra-files": [
         {
           "type": "generic",
@@ -14,17 +18,17 @@
         }
       ],
       "changelog-sections": [
-        { "type": "feat", "section": "Features" },
+        { "type": "feat", "section": "New Features" },
         { "type": "fix", "section": "Bug Fixes" },
         { "type": "perf", "section": "Performance Improvements" },
         { "type": "revert", "section": "Reverts" },
-        { "type": "refactor", "section": "Code Refactoring", "hidden": true },
+        { "type": "refactor", "section": "Internal Improvements", "hidden": true },
         { "type": "build", "section": "Build System", "hidden": true },
         { "type": "ci", "section": "Continuous Integration", "hidden": true },
         { "type": "docs", "section": "Documentation", "hidden": true },
         { "type": "test", "section": "Tests", "hidden": true },
         { "type": "style", "section": "Styles", "hidden": true },
-        { "type": "chore", "section": "Miscellaneous Chores", "hidden": true }
+        { "type": "chore", "section": "Maintenance", "hidden": true }
       ]
     }
   }
