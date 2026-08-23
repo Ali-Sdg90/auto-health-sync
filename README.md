@@ -2,6 +2,7 @@
 
 [![CI](https://github.com/Ali-Sdg90/auto-health-sync/actions/workflows/ci.yml/badge.svg)](https://github.com/Ali-Sdg90/auto-health-sync/actions/workflows/ci.yml)
 [![GitHub release](https://img.shields.io/github/v/release/Ali-Sdg90/auto-health-sync?display_name=tag&sort=semver)](https://github.com/Ali-Sdg90/auto-health-sync/releases)
+[![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
 
 Auto Health Sync is a focused Android utility that creates one compact health summary per day from Health Connect and stores it in the user's Google Drive.
 
@@ -73,6 +74,8 @@ Release Please keeps a release PR current. Merging that PR creates a SemVer tag 
 
 Maintainer setup, signing-secret names, branch rules, recovery instructions, and the complete release flow are documented in [docs/RELEASING.md](docs/RELEASING.md).
 
+Project documentation: [Architecture](docs/ARCHITECTURE.md) · [Contributing](CONTRIBUTING.md) · [Security](SECURITY.md) · [Releasing](docs/RELEASING.md)
+
 ## First-run checklist
 
 1. Open the app and allow backup-status notifications.
@@ -125,3 +128,9 @@ When a day contains multiple distinct sleep sessions, total sleep and every avai
 - Real Health Connect and Drive behavior must be validated on a physical device. Unit tests cover deterministic date conversion, scheduling boundaries, the two-day recovery window, and omission of absent JSON metrics.
 
 For the complete product intent and constraints, see [vision.md](vision.md).
+
+## License
+
+Copyright 2026 Ali Sadeghi.
+
+Licensed under the [Apache License 2.0](LICENSE). You may use, modify, and distribute this project under the terms of that license.
