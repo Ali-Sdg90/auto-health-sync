@@ -19,6 +19,7 @@ It follows one deliberately small pipeline:
 - Updates an existing daily file instead of creating duplicates.
 - Lets the user choose any report date from the main screen, defaulting to today, and requests Health Connect history access for older records.
 - Runs at a configurable daily time (23:00 by default) in `Asia/Tehran`, survives process restarts through WorkManager, and repairs its next scheduled job whenever the app opens.
+- Gates the first launch behind a guided setup for Health Connect, Google Drive, unrestricted battery use, and manufacturer-specific Auto Start when available.
 - Opens Health Connect data management and the backup folder in Google Drive directly from their connected status controls.
 - Retries recoverable automatic failures five times at roughly three-minute intervals.
 - Checks only the previous two days for missing backups.
@@ -78,11 +79,12 @@ Project documentation: [Architecture](docs/ARCHITECTURE.md) · [Contributing](CO
 
 ## First-run checklist
 
-1. Open the app and allow backup-status notifications.
-2. Tap **Connect** beside Health Connect and grant all requested read permissions, including background and history access.
-3. Tap **Connect** beside Google Drive and authorize `drive.file` access.
-4. Keep **Report date** on today or choose a past date, then tap the backup button.
-5. Confirm that the configured Drive folder contains the dated JSON file and inspect Recent Activity in the app.
+1. Follow the in-app setup and grant all requested Health Connect read permissions, including background and history access.
+2. Authorize Google Drive `drive.file` access.
+3. Open battery settings and select **Unrestricted** for Auto Health Sync.
+4. On supported manufacturer builds, enable **Auto Start** and confirm the step in the app.
+5. Optionally allow backup-status notifications, then finish setup.
+6. Keep **Report date** on today or choose a past date, run a manual backup, and verify the dated JSON in Drive.
 
 Health Connect permissions can be revoked at any time. The app checks access before every operation and fails visibly rather than crashing or silently skipping a backup.
 
@@ -124,7 +126,7 @@ When a day contains multiple distinct sleep sessions, total sleep and every avai
 
 - A Play Store release must complete Google's Health Connect declaration and provide a public privacy policy matching [PRIVACY.md](PRIVACY.md).
 - Register the release signing certificate SHA-1 as another Android OAuth client before testing the release build.
-- Battery optimization and Doze may delay the selected run time. This is intentional: WorkManager reliability is preferred over exact-alarm permissions.
+- The first-run setup requires unrestricted battery use and supported OEM Auto Start controls, but Android may still delay work in exceptional system conditions. WorkManager reliability is preferred over exact-alarm permissions.
 - Real Health Connect and Drive behavior must be validated on a physical device. Unit tests cover deterministic date conversion, scheduling boundaries, the two-day recovery window, and omission of absent JSON metrics.
 
 For the complete product intent and constraints, see [vision.md](vision.md).

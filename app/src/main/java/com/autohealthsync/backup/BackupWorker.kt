@@ -13,6 +13,9 @@ class BackupWorker(
 ) : CoroutineWorker(appContext, workerParams) {
     override suspend fun doWork(): Result {
         val app = applicationContext as AutoHealthSyncApp
+        if (!app.container.stateStore.current().onboardingCompleted) {
+            return Result.success()
+        }
         val date = inputData.getString(KEY_DATE)?.let(LocalDate::parse) ?: LocalDate.now()
         val attempt = inputData.getInt(KEY_ATTEMPT, 0)
 

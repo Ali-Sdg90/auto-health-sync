@@ -39,6 +39,11 @@ class BackupScheduler(
         }
     }
 
+    fun cancelAutomaticBackups() {
+        workManager.cancelAllWorkByTag(TAG_SCHEDULED)
+        workManager.cancelAllWorkByTag(TAG_RETRY)
+    }
+
     private fun scheduleNextBackup(stateStore: AppStateStore, policy: ExistingWorkPolicy) {
         schedulerScope.launch {
             enqueueNextBackup(stateStore.current().backupSettings, policy)

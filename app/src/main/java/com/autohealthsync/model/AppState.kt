@@ -5,6 +5,8 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class AppState(
+    val onboardingCompleted: Boolean = false,
+    val autoStartConfirmed: Boolean = false,
     val driveFolderId: String? = null,
     val lastSuccessfulBackupEpochMillis: Long? = null,
     val lastSuccessfulBackupDate: String? = null,

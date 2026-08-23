@@ -32,13 +32,16 @@ import androidx.compose.material.icons.rounded.Check
 import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material.icons.rounded.Cloud
 import androidx.compose.material.icons.rounded.CalendarMonth
+import androidx.compose.material.icons.rounded.BatteryChargingFull
 import androidx.compose.material.icons.rounded.ErrorOutline
 import androidx.compose.material.icons.rounded.Favorite
 import androidx.compose.material.icons.rounded.Folder
 import androidx.compose.material.icons.rounded.HealthAndSafety
 import androidx.compose.material.icons.rounded.History
 import androidx.compose.material.icons.rounded.Info
+import androidx.compose.material.icons.rounded.NotificationsActive
 import androidx.compose.material.icons.rounded.Refresh
+import androidx.compose.material.icons.rounded.RocketLaunch
 import androidx.compose.material.icons.rounded.Schedule
 import androidx.compose.material.icons.rounded.Settings
 import androidx.compose.material.icons.rounded.Sync
@@ -58,6 +61,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.SelectableDates
 import androidx.compose.material3.Surface
@@ -109,9 +113,38 @@ fun MainScreen(
     onBackupNow: () -> Unit,
     onBackupDateChange: (LocalDate) -> Unit,
     onSaveSettings: (BackupSettings) -> Unit,
+    onRequestNotifications: () -> Unit,
+    onOpenBatterySettings: () -> Unit,
+    onOpenAutoStartSettings: () -> Unit,
+    onConfirmAutoStart: () -> Unit,
+    onCompleteOnboarding: () -> Unit,
     contentPadding: PaddingValues = PaddingValues(),
 ) {
     var settingsVisible by remember { mutableStateOf(false) }
+
+    if (!state.isAppStateLoaded) {
+        Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
+            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                CircularProgressIndicator()
+            }
+        }
+        return
+    }
+
+    if (state.showOnboarding) {
+        OnboardingScreen(
+            state = state,
+            onHealthConnect = onHealthConnect,
+            onDriveConnect = onDriveConnect,
+            onRequestNotifications = onRequestNotifications,
+            onOpenBatterySettings = onOpenBatterySettings,
+            onOpenAutoStartSettings = onOpenAutoStartSettings,
+            onConfirmAutoStart = onConfirmAutoStart,
+            onComplete = onCompleteOnboarding,
+            contentPadding = contentPadding,
+        )
+        return
+    }
 
     Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
         LazyColumn(
@@ -167,10 +200,281 @@ fun MainScreen(
 }
 
 @Composable
+private fun OnboardingScreen(
+    state: MainUiState,
+    onHealthConnect: () -> Unit,
+    onDriveConnect: () -> Unit,
+    onRequestNotifications: () -> Unit,
+    onOpenBatterySettings: () -> Unit,
+    onOpenAutoStartSettings: () -> Unit,
+    onConfirmAutoStart: () -> Unit,
+    onComplete: () -> Unit,
+    contentPadding: PaddingValues,
+) {
+    Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
+        LazyColumn(
+            modifier = Modifier.fillMaxSize(),
+            contentPadding = PaddingValues(
+                start = 20.dp,
+                end = 20.dp,
+                top = contentPadding.calculateTopPadding() + 28.dp,
+                bottom = contentPadding.calculateBottomPadding() + 28.dp,
+            ),
+            verticalArrangement = Arrangement.spacedBy(14.dp),
+        ) {
+            item {
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Box(
+                        modifier = Modifier
+                            .size(56.dp)
+                            .clip(RoundedCornerShape(18.dp))
+                            .background(MaterialTheme.colorScheme.primaryContainer),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Icon(
+                            Icons.Rounded.HealthAndSafety,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(30.dp),
+                        )
+                    }
+                    Spacer(Modifier.height(4.dp))
+                    Text(
+                        "Set up automatic backups",
+                        style = MaterialTheme.typography.headlineMedium,
+                        fontWeight = FontWeight.Bold,
+                    )
+                    Text(
+                        "Complete the required access once so Auto Health Sync can back up in the background.",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+            }
+
+            item {
+                SetupStepCard(
+                    icon = Icons.Rounded.HealthAndSafety,
+                    title = "Health Connect",
+                    description = "Allow health reads, history, and background access.",
+                    complete = state.healthState == ConnectionState.CONNECTED,
+                    checking = state.healthState == ConnectionState.CHECKING,
+                    unavailable = state.healthState == ConnectionState.UNAVAILABLE,
+                    actionLabel = if (state.healthState == ConnectionState.UNAVAILABLE) "Install" else "Allow",
+                    onAction = onHealthConnect,
+                )
+            }
+            item {
+                SetupStepCard(
+                    icon = Icons.Rounded.Cloud,
+                    title = "Google Drive",
+                    description = "Allow access to files created by this app.",
+                    complete = state.driveState == ConnectionState.CONNECTED,
+                    checking = state.driveState == ConnectionState.CHECKING,
+                    unavailable = state.driveState == ConnectionState.UNAVAILABLE,
+                    actionLabel = "Connect",
+                    onAction = onDriveConnect,
+                )
+            }
+            item {
+                SetupStepCard(
+                    icon = Icons.Rounded.BatteryChargingFull,
+                    title = "Unrestricted battery use",
+                    description = if (state.backgroundAccess.backgroundRestricted) {
+                        "Background use is restricted. Open settings and select Unrestricted."
+                    } else {
+                        "Open battery settings, find Auto Health Sync, and select Unrestricted."
+                    },
+                    complete = state.backgroundAccess.batteryAccessGranted,
+                    actionLabel = "Open settings",
+                    onAction = onOpenBatterySettings,
+                )
+            }
+            if (state.backgroundAccess.autoStartSettingsAvailable) {
+                item {
+                    AutoStartStepCard(
+                        manufacturer = state.backgroundAccess.manufacturerName,
+                        complete = state.autoStartReady,
+                        onOpenSettings = onOpenAutoStartSettings,
+                        onConfirm = onConfirmAutoStart,
+                    )
+                }
+            }
+            item {
+                SetupStepCard(
+                    icon = Icons.Rounded.NotificationsActive,
+                    title = "Backup notifications",
+                    description = "Recommended for failures and recovered backups.",
+                    complete = state.notificationGranted,
+                    optional = true,
+                    actionLabel = "Allow",
+                    onAction = onRequestNotifications,
+                )
+            }
+            item {
+                Button(
+                    onClick = onComplete,
+                    enabled = state.requiredSetupComplete,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(56.dp),
+                    shape = RoundedCornerShape(18.dp),
+                ) {
+                    Text("Finish setup", fontWeight = FontWeight.SemiBold)
+                }
+                if (!state.requiredSetupComplete) {
+                    Text(
+                        "Complete every required step to continue.",
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(top = 10.dp),
+                        textAlign = TextAlign.Center,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun SetupStepCard(
+    icon: ImageVector,
+    title: String,
+    description: String,
+    complete: Boolean,
+    actionLabel: String,
+    onAction: () -> Unit,
+    checking: Boolean = false,
+    unavailable: Boolean = false,
+    optional: Boolean = false,
+) {
+    Card(
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer),
+        shape = RoundedCornerShape(22.dp),
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(17.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(44.dp)
+                    .clip(CircleShape)
+                    .background(
+                        if (complete) Color(0xFF20A67A).copy(alpha = 0.14f)
+                        else MaterialTheme.colorScheme.primaryContainer,
+                    ),
+                contentAlignment = Alignment.Center,
+            ) {
+                Icon(
+                    if (complete) Icons.Rounded.Check else icon,
+                    contentDescription = null,
+                    tint = if (complete) Color(0xFF16805F) else MaterialTheme.colorScheme.primary,
+                )
+            }
+            Spacer(Modifier.width(13.dp))
+            Column(Modifier.weight(1f)) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
+                    if (optional) {
+                        Text(
+                            "  Optional",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
+                }
+                Text(
+                    when {
+                        complete -> "Ready"
+                        unavailable -> "Not available on this device"
+                        else -> description
+                    },
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+            Spacer(Modifier.width(8.dp))
+            when {
+                checking -> CircularProgressIndicator(modifier = Modifier.size(24.dp), strokeWidth = 2.dp)
+                complete -> Unit
+                else -> TextButton(onClick = onAction) { Text(actionLabel) }
+            }
+        }
+    }
+}
+
+@Composable
+private fun AutoStartStepCard(
+    manufacturer: String,
+    complete: Boolean,
+    onOpenSettings: () -> Unit,
+    onConfirm: () -> Unit,
+) {
+    Card(
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer),
+        shape = RoundedCornerShape(22.dp),
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(17.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Box(
+                    modifier = Modifier
+                        .size(44.dp)
+                        .clip(CircleShape)
+                        .background(
+                            if (complete) Color(0xFF20A67A).copy(alpha = 0.14f)
+                            else MaterialTheme.colorScheme.primaryContainer,
+                        ),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Icon(
+                        if (complete) Icons.Rounded.Check else Icons.Rounded.RocketLaunch,
+                        contentDescription = null,
+                        tint = if (complete) Color(0xFF16805F) else MaterialTheme.colorScheme.primary,
+                    )
+                }
+                Spacer(Modifier.width(13.dp))
+                Column(Modifier.weight(1f)) {
+                    Text("Auto Start", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
+                    Text(
+                        if (complete) "Ready" else "Enable Auto Health Sync in $manufacturer startup settings.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+            }
+            if (!complete) {
+                Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                    OutlinedButton(
+                        onClick = onOpenSettings,
+                        modifier = Modifier.weight(1f),
+                        shape = RoundedCornerShape(14.dp),
+                    ) { Text("Open settings") }
+                    Button(
+                        onClick = onConfirm,
+                        modifier = Modifier.weight(1f),
+                        shape = RoundedCornerShape(14.dp),
+                    ) { Text("I've enabled it") }
+                }
+            }
+        }
+    }
+}
+
+@Composable
 private fun AppFooter() {
     val uriHandler = LocalUriHandler.current
     Text(
-        text = "v${BuildConfig.VERSION_NAME} · Created by A.S.",
+        text = "v${BuildConfig.VERSION_NAME} · Built with care by A.S.",
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(12.dp))

@@ -657,6 +657,25 @@ Keep notifications useful and minimal.
 
 ---
 
+# First-run Setup
+
+Gate the main utility screen behind a one-time guided setup.
+
+Required steps are:
+
+- Complete Health Connect read, background-read, and supported history access.
+- Authorize the narrow Google Drive `drive.file` scope.
+- Disable battery optimization for Auto Health Sync and ensure background use is not restricted.
+- When the installed manufacturer exposes a supported Auto Start screen, open it and require the user to confirm that Auto Start was enabled.
+
+Backup-status notifications are recommended but must remain optional because denying notification access does not prevent the backup itself.
+
+Do not schedule new automatic work until the required setup is complete. Persist completion locally and do not show onboarding again on later launches. If access is later revoked or temporarily unavailable, keep the main screen available and surface the affected connection state there.
+
+Auto Start is an OEM feature rather than a standard Android permission. Use only resolvable manufacturer settings activities and fall back safely to the application details screen.
+
+---
+
 # Main UI
 
 The application should have a single polished main screen.

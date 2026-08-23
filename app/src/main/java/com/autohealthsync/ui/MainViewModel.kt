@@ -1,10 +1,14 @@
 package com.autohealthsync.ui
 
+import android.Manifest
 import android.app.Application
 import android.app.PendingIntent
 import android.content.Intent
+import android.content.pm.PackageManager
+import android.os.Build
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.core.content.ContextCompat
 import com.autohealthsync.app.AutoHealthSyncApp
 import com.autohealthsync.backup.BackupOutcome
 import com.autohealthsync.backup.BackupTrigger
@@ -15,6 +19,7 @@ import com.autohealthsync.model.BackupSettings
 import com.autohealthsync.model.ConnectionState
 import com.autohealthsync.model.localTime
 import com.autohealthsync.model.normalized
+import com.autohealthsync.system.BackgroundAccessStatus
 import com.autohealthsync.util.DateUtils
 import java.time.Instant
 import java.time.LocalDate
@@ -34,6 +39,8 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     private val isBackingUp = MutableStateFlow(false)
     private val statusText = MutableStateFlow<String?>(null)
     private val selectedBackupDate = MutableStateFlow(DateUtils.today())
+    private val notificationGranted = MutableStateFlow(hasNotificationPermission())
+    private val backgroundAccess = MutableStateFlow(container.backgroundAccessManager.status)
     private val eventChannel = Channel<UiEvent>(Channel.BUFFERED)
 
     val healthPermissions: Set<String>
@@ -47,19 +54,28 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         selectedBackupDate,
     ) { backingUp, text, date -> BackupActionState(backingUp, text, date) }
 
+    private val setupState = combine(
+        notificationGranted,
+        backgroundAccess,
+    ) { notifications, background -> SystemSetupState(notifications, background) }
+
     val uiState = combine(
         container.stateStore.state,
         healthStatus,
         driveStatus,
         backupActionState,
-    ) { state, health, drive, backupAction ->
+        setupState,
+    ) { state, health, drive, backupAction, setup ->
         MainUiState(
             appState = state,
+            isAppStateLoaded = true,
             healthState = health,
             driveState = drive,
             isBackingUp = backupAction.isBackingUp,
             operationStatus = backupAction.status,
             selectedBackupDate = backupAction.date,
+            notificationGranted = setup.notificationGranted,
+            backgroundAccess = setup.backgroundAccess,
             nextBackupEpochMillis = DateUtils.nextBackup(state.backupSettings.localTime())
                 .toInstant()
                 .toEpochMilli(),
@@ -68,10 +84,11 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
     init {
         refreshConnections()
-        container.backupScheduler.ensureNextBackupScheduled()
     }
 
     fun refreshConnections() {
+        notificationGranted.value = hasNotificationPermission()
+        backgroundAccess.value = container.backgroundAccessManager.status
         viewModelScope.launch {
             healthStatus.value = ConnectionState.CHECKING
             healthStatus.value = when {
@@ -150,6 +167,66 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
+    fun requestNotificationPermission() {
+        viewModelScope.launch {
+            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU || hasNotificationPermission()) {
+                notificationGranted.value = true
+            } else {
+                eventChannel.send(UiEvent.RequestNotificationPermission)
+            }
+        }
+    }
+
+    fun onNotificationPermissionResult(granted: Boolean) {
+        notificationGranted.value = granted || hasNotificationPermission()
+    }
+
+    fun openBatterySettings() {
+        viewModelScope.launch {
+            eventChannel.send(
+                UiEvent.OpenSystemSettings(container.backgroundAccessManager.batterySettingsIntent()),
+            )
+        }
+    }
+
+    fun openAutoStartSettings() {
+        viewModelScope.launch {
+            val intent = container.backgroundAccessManager.autoStartSettingsIntent()
+                ?: container.backgroundAccessManager.appDetailsIntent()
+            eventChannel.send(UiEvent.OpenSystemSettings(intent))
+        }
+    }
+
+    fun confirmAutoStart() {
+        viewModelScope.launch {
+            container.stateStore.setAutoStartConfirmed(true)
+        }
+    }
+
+    fun completeOnboarding() {
+        viewModelScope.launch {
+            val state = container.stateStore.current()
+            val background = container.backgroundAccessManager.status
+            val autoStartReady = !background.autoStartSettingsAvailable || state.autoStartConfirmed
+            val ready = healthStatus.value == ConnectionState.CONNECTED &&
+                driveStatus.value == ConnectionState.CONNECTED &&
+                background.batteryAccessGranted && autoStartReady
+            if (!ready) {
+                backgroundAccess.value = background
+                eventChannel.send(UiEvent.Message("Complete the required setup first"))
+                return@launch
+            }
+            container.stateStore.completeOnboarding()
+            container.backupScheduler.ensureNextBackupScheduled()
+            container.stateStore.addActivity(
+                ActivitySeverity.SUCCESS,
+                "Setup completed",
+                "Automatic backups are ready",
+            )
+            eventChannel.send(UiEvent.Message("Automatic backups are ready"))
+        }
+    }
+
     fun requestHealthConnection() {
         viewModelScope.launch {
             if (container.healthManager.isAvailable) {
@@ -225,12 +302,24 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         container.stateStore.addActivity(ActivitySeverity.SUCCESS, "Google Drive connected")
         eventChannel.send(UiEvent.Message("Google Drive connected"))
     }
+
+    private fun hasNotificationPermission(): Boolean =
+        Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU ||
+            ContextCompat.checkSelfPermission(
+                getApplication(),
+                Manifest.permission.POST_NOTIFICATIONS,
+            ) == PackageManager.PERMISSION_GRANTED
 }
 
 private data class BackupActionState(
     val isBackingUp: Boolean,
     val status: String?,
     val date: LocalDate,
+)
+
+private data class SystemSetupState(
+    val notificationGranted: Boolean,
+    val backgroundAccess: BackgroundAccessStatus,
 )
 
 private fun backupDateLabel(date: LocalDate): String {
@@ -244,19 +333,35 @@ private fun backupDateLabel(date: LocalDate): String {
 
 data class MainUiState(
     val appState: AppState = AppState(),
+    val isAppStateLoaded: Boolean = false,
     val healthState: ConnectionState = ConnectionState.CHECKING,
     val driveState: ConnectionState = ConnectionState.CHECKING,
     val isBackingUp: Boolean = false,
     val operationStatus: String? = null,
     val selectedBackupDate: LocalDate = DateUtils.today(),
+    val notificationGranted: Boolean = Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU,
+    val backgroundAccess: BackgroundAccessStatus = BackgroundAccessStatus(),
     val nextBackupEpochMillis: Long = DateUtils.nextBackup().toInstant().toEpochMilli(),
-)
+) {
+    val autoStartReady: Boolean
+        get() = !backgroundAccess.autoStartSettingsAvailable || appState.autoStartConfirmed
+
+    val requiredSetupComplete: Boolean
+        get() = healthState == ConnectionState.CONNECTED &&
+            driveState == ConnectionState.CONNECTED &&
+            backgroundAccess.batteryAccessGranted && autoStartReady
+
+    val showOnboarding: Boolean
+        get() = isAppStateLoaded && !appState.onboardingCompleted
+}
 
 sealed interface UiEvent {
     data class ResolveDriveAuthorization(val pendingIntent: PendingIntent) : UiEvent
     data class Message(val text: String) : UiEvent
     data object RequestHealthPermissions : UiEvent
+    data object RequestNotificationPermission : UiEvent
     data object OpenHealthConnectStore : UiEvent
     data object OpenHealthConnect : UiEvent
     data class OpenGoogleDrive(val folderId: String?) : UiEvent
+    data class OpenSystemSettings(val intent: Intent) : UiEvent
 }

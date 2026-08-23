@@ -8,11 +8,13 @@ import com.autohealthsync.drive.DriveBackupManager
 import com.autohealthsync.health.HealthConnectManager
 import com.autohealthsync.notification.BackupNotificationManager
 import com.autohealthsync.storage.AppStateStore
+import com.autohealthsync.system.BackgroundAccessManager
 
 class AppContainer(context: Context) {
     private val appContext = context.applicationContext
 
     val stateStore = AppStateStore(appContext)
+    val backgroundAccessManager = BackgroundAccessManager(appContext)
     val healthManager = HealthConnectManager(appContext)
     val driveAuthorizationManager = DriveAuthorizationManager(appContext)
     val driveBackupManager = DriveBackupManager(driveAuthorizationManager, stateStore)

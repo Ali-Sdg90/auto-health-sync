@@ -16,28 +16,12 @@
 
 - [x] Add an “Open Health Connect” action.
 
-- [ ] Add a first-run onboarding checklist for Health Connect, Drive, notifications, and background access.
+- [x] Add a first-run onboarding checklist for Health Connect, Drive, notifications, and background access.
 
-- [ ] Add a system health/status check to warn when Health Connect permissions, Drive authorization, notifications, or background execution are unavailable.
+- [x] Add a system health/status check to warn when Health Connect permissions, Drive authorization, notifications, or background execution are unavailable.
 
 - [x] Add an About section/footer with app version, repository link, privacy policy, and Created by A.S..
 
 - [x] Add a privacy policy to the repository and app.
 
 - [x] Add Apache License 2.0 to the repository.
-
----
-
-## Play Store release readiness
-
-- [ ] Publish a public app homepage and complete privacy policy.
-
-- [ ] Add an in-app privacy policy link and a clear Health Connect disclosure before requesting permissions.
-
-- [ ] Complete Play Console Data Safety, Health Apps, permissions, audience, content rating, and ads declarations.
-
-- [ ] Prepare the Play Store listing, screenshots, graphics, and support contact.
-
-- [ ] Register the Play App Signing SHA-1 in Google Cloud OAuth configuration.
-
-- [ ] Upload the signed AAB to Internal Testing and validate Health Connect, Google Drive, and scheduled backups on a real device.

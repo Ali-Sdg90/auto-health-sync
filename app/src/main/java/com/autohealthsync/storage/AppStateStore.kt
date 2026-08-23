@@ -53,6 +53,14 @@ class AppStateStore(
         dataStore.updateData { it.copy(driveFolderId = folderId) }
     }
 
+    suspend fun setAutoStartConfirmed(confirmed: Boolean) {
+        dataStore.updateData { it.copy(autoStartConfirmed = confirmed) }
+    }
+
+    suspend fun completeOnboarding() {
+        dataStore.updateData { it.copy(onboardingCompleted = true) }
+    }
+
     suspend fun setBackupSettings(settings: BackupSettings) {
         dataStore.updateData { state ->
             val backupLocationChanged =
