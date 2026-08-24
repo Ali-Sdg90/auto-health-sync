@@ -130,7 +130,7 @@ main {
   padding-block: 92px 106px;
   align-items: center;
   gap: 72px;
-  grid-template-columns: minmax(0, 1.08fr) minmax(360px, 0.92fr);
+  grid-template-columns: minmax(0, 1.2fr) minmax(360px, 0.92fr);
 }
 
 .eyebrow {
@@ -166,7 +166,7 @@ h1 {
   margin-bottom: 24px;
   font-size: clamp(3.2rem, 7.1vw, 6.1rem);
   font-weight: 780;
-  letter-spacing: -0.066em;
+  letter-spacing: -0.046em;
   line-height: 0.97;
 }
 

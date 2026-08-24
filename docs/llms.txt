@@ -1,0 +1,16 @@
+# Auto Health Sync
+
+> An open-source Android personal health data pipeline from Health Connect to the user's Google Drive.
+
+Auto Health Sync reads user-approved Health Connect categories, creates compact daily JSON summaries on the device, and uploads them directly to Google Drive. It has no developer-operated backend, analytics, advertising, or independent user-account system.
+
+## Primary pages
+
+- [Homepage](https://ali-sdg.is-a.dev/auto-health-sync/): Product overview, data flow, features, and downloads.
+- [Privacy Policy](https://ali-sdg.is-a.dev/auto-health-sync/privacy/): Data access, processing, storage, security, retention, and user controls.
+
+## Project resources
+
+- [Source code](https://github.com/Ali-Sdg90/auto-health-sync): Android application source and documentation.
+- [Latest release](https://github.com/Ali-Sdg90/auto-health-sync/releases/latest): Current downloadable release.
+- [Architecture](https://github.com/Ali-Sdg90/auto-health-sync/blob/main/docs/ARCHITECTURE.md): Technical data flow and component responsibilities.
