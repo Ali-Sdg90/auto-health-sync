@@ -12,6 +12,7 @@ class BackupSettingsTest {
         assertEquals(0, settings.backupMinute)
         assertEquals("Auto: Health Data", settings.driveFolderName)
         assertEquals(FileDateSystem.JALALI, settings.fileDateSystem)
+        assertEquals(BackupMetric.entries.toSet(), settings.includedMetrics)
     }
 
     @Test
@@ -25,5 +26,15 @@ class BackupSettingsTest {
         assertEquals(23, settings.backupHour)
         assertEquals(0, settings.backupMinute)
         assertEquals("My Health", settings.driveFolderName)
+    }
+
+    @Test
+    fun `normalization preserves selected backup metrics`() {
+        val selected = setOf(BackupMetric.STEPS, BackupMetric.SLEEP)
+
+        assertEquals(
+            selected,
+            BackupSettings(includedMetrics = selected).normalized().includedMetrics,
+        )
     }
 }

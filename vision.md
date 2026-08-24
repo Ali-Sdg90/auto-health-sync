@@ -252,6 +252,23 @@ If available, store the latest valid weight recorded during the day as a single 
 
 If no weight was recorded for that day, keep the field and store `"weight": null`.
 
+If the user disables weight in Backup Data settings, omit the field completely.
+
+---
+
+# Selectable Backup Data
+
+Settings should include an **Included data** action that opens a modal with these groups:
+
+- Steps
+- Weight
+- Activity, including distance and workouts
+- Heart, including resting and recorded heart rate
+- Sleep
+- Blood oxygen
+
+All groups are selected by default. Persist the selection in local settings and apply it to both manual and automatic backups. A disabled group must be completely absent from the generated JSON while `date` and `dateGregorian` remain present.
+
 ---
 
 # Date and Time

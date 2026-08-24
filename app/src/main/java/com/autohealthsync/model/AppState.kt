@@ -22,7 +22,18 @@ data class BackupSettings(
     val backupMinute: Int = 0,
     val driveFolderName: String = DEFAULT_DRIVE_FOLDER_NAME,
     val fileDateSystem: FileDateSystem = FileDateSystem.JALALI,
+    val includedMetrics: Set<BackupMetric> = BackupMetric.entries.toSet(),
 )
+
+@Serializable
+enum class BackupMetric {
+    STEPS,
+    WEIGHT,
+    ACTIVITY,
+    HEART,
+    SLEEP,
+    SPO2,
+}
 
 @Serializable
 enum class FileDateSystem {

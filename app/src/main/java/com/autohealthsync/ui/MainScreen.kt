@@ -29,6 +29,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowForward
 import androidx.compose.material.icons.rounded.Check
+import androidx.compose.material.icons.rounded.Checklist
 import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material.icons.rounded.Cloud
 import androidx.compose.material.icons.rounded.CalendarMonth
@@ -51,6 +52,7 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDialog
@@ -93,6 +95,7 @@ import com.autohealthsync.BuildConfig
 import com.autohealthsync.model.ActivityEntry
 import com.autohealthsync.model.ActivitySeverity
 import com.autohealthsync.model.BackupSettings
+import com.autohealthsync.model.BackupMetric
 import com.autohealthsync.model.ConnectionState
 import com.autohealthsync.model.FileDateSystem
 import com.autohealthsync.model.MAX_DRIVE_FOLDER_NAME_LENGTH
@@ -499,7 +502,11 @@ private fun SettingsSheet(
     var backupMinute by remember(settings.backupMinute) { mutableStateOf(settings.backupMinute) }
     var folderName by remember(settings.driveFolderName) { mutableStateOf(settings.driveFolderName) }
     var dateSystem by remember(settings.fileDateSystem) { mutableStateOf(settings.fileDateSystem) }
+    var includedMetrics by remember(settings.includedMetrics) {
+        mutableStateOf(settings.includedMetrics)
+    }
     var timePickerVisible by remember { mutableStateOf(false) }
+    var backupDataVisible by remember { mutableStateOf(false) }
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
     ModalBottomSheet(
@@ -530,6 +537,14 @@ private fun SettingsSheet(
                 title = "Automatic backup",
                 value = "%02d:%02d".format(backupHour, backupMinute),
                 onClick = { timePickerVisible = true },
+            )
+
+            Text("BACKUP DATA", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary)
+            SettingsActionCard(
+                icon = Icons.Rounded.Checklist,
+                title = "Included data",
+                value = includedMetrics.summaryLabel(),
+                onClick = { backupDataVisible = true },
             )
 
             Text("GOOGLE DRIVE", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary)
@@ -579,6 +594,7 @@ private fun SettingsSheet(
                             backupMinute = backupMinute,
                             driveFolderName = folderName,
                             fileDateSystem = dateSystem,
+                            includedMetrics = includedMetrics,
                         ),
                     )
                 },
@@ -617,6 +633,101 @@ private fun SettingsSheet(
             },
         )
     }
+
+    if (backupDataVisible) {
+        BackupDataDialog(
+            selected = includedMetrics,
+            onDismiss = { backupDataVisible = false },
+            onConfirm = {
+                includedMetrics = it
+                backupDataVisible = false
+            },
+        )
+    }
+}
+
+@Composable
+private fun BackupDataDialog(
+    selected: Set<BackupMetric>,
+    onDismiss: () -> Unit,
+    onConfirm: (Set<BackupMetric>) -> Unit,
+) {
+    var draft by remember(selected) { mutableStateOf(selected) }
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Backup data") },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                Text(
+                    "Choose which health data appears in each backup.",
+                    modifier = Modifier.padding(bottom = 8.dp),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                BackupMetric.entries.forEach { metric ->
+                    val checked = metric in draft
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(12.dp))
+                            .clickable {
+                                draft = if (checked) draft - metric else draft + metric
+                            }
+                            .padding(horizontal = 4.dp, vertical = 5.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Checkbox(
+                            checked = checked,
+                            onCheckedChange = {
+                                draft = if (checked) draft - metric else draft + metric
+                            },
+                        )
+                        Spacer(Modifier.width(8.dp))
+                        Column(Modifier.weight(1f)) {
+                            Text(metric.title, fontWeight = FontWeight.SemiBold)
+                            Text(
+                                metric.description,
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                        }
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = { onConfirm(draft) }) { Text("Done") }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) { Text("Cancel") }
+        },
+    )
+}
+
+private val BackupMetric.title: String
+    get() = when (this) {
+        BackupMetric.STEPS -> "Steps"
+        BackupMetric.WEIGHT -> "Weight"
+        BackupMetric.ACTIVITY -> "Activity"
+        BackupMetric.HEART -> "Heart"
+        BackupMetric.SLEEP -> "Sleep"
+        BackupMetric.SPO2 -> "Blood oxygen"
+    }
+
+private val BackupMetric.description: String
+    get() = when (this) {
+        BackupMetric.STEPS -> "Daily step count"
+        BackupMetric.WEIGHT -> "Latest daily weight"
+        BackupMetric.ACTIVITY -> "Distance and workouts"
+        BackupMetric.HEART -> "Resting and recorded heart rate"
+        BackupMetric.SLEEP -> "Sleep sessions and stages"
+        BackupMetric.SPO2 -> "Daily SpO₂ summary"
+    }
+
+private fun Set<BackupMetric>.summaryLabel(): String = when (size) {
+    BackupMetric.entries.size -> "All data"
+    0 -> "No data"
+    else -> "$size of ${BackupMetric.entries.size}"
 }
 
 @Composable

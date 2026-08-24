@@ -15,6 +15,7 @@ It follows one deliberately small pipeline:
 - Reads steps, distance, workouts, heart rate, resting heart rate, sleep, SpO₂, and the latest daily weight from Health Connect.
 - Reads all sources available through Health Connect; source permissions, stored data, and activity priorities are managed in Health Connect settings.
 - Generates `health-data-YYYY-MM-DD.json` using the user-selected Jalali or Gregorian filename date; the JSON always includes an unambiguous Gregorian date.
+- Lets the user include or exclude steps, weight, activity, heart, sleep, and blood oxygen from every backup; all groups are enabled by default.
 - Creates or reuses a configurable Google Drive folder, defaulting to `Auto: Health Data`, using the narrow `drive.file` scope.
 - Updates an existing daily file instead of creating duplicates.
 - Lets the user choose any report date from the main screen, defaulting to today, and requests Health Connect history access for older records.
@@ -90,9 +91,9 @@ Health Connect permissions can be revoked at any time. The app checks access bef
 
 ## JSON shape
 
-Sections with no meaningful source data are omitted:
+Disabled data groups and sections with no meaningful source data are omitted:
 
-`weight` is the exception: it is always present and is `null` when no weight was recorded that day.
+When weight is enabled, it is always present and is `null` when no weight was recorded that day. Disabling weight removes the field completely.
 
 When a day contains multiple distinct sleep sessions, total sleep and every available sleep-stage summary are summed across all sessions; overlapping duplicate records are counted only once.
 

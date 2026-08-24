@@ -1,6 +1,7 @@
 package com.autohealthsync.backup
 
 import com.autohealthsync.model.DailyHealthSummary
+import com.autohealthsync.model.BackupMetric
 import com.autohealthsync.model.HeartSummary
 import com.autohealthsync.model.SleepSummary
 import kotlinx.serialization.encodeToString
@@ -99,5 +100,79 @@ class DailyHealthSummarySerializationTest {
         )
 
         assertFalse(encoded.contains("napMinutes"))
+    }
+
+    @Test
+    fun `disabled metric groups are completely omitted from backup JSON`() {
+        val encoded = json.encodeSelectedSummary(
+            summary = DailyHealthSummary(
+                date = "1405-05-28",
+                dateGregorian = "2026-08-19",
+                steps = 5816,
+                weight = null,
+                heart = HeartSummary(average = 72),
+                sleep = SleepSummary(
+                    bedTime = "03:12",
+                    wakeTime = "13:08",
+                    totalMinutes = 552,
+                ),
+            ),
+            includedMetrics = setOf(BackupMetric.STEPS, BackupMetric.SLEEP),
+        )
+
+        assertTrue(encoded.contains("\"dateGregorian\":\"2026-08-19\""))
+        assertTrue(encoded.contains("\"steps\":5816"))
+        assertTrue(encoded.contains("\"sleep\""))
+        assertFalse(encoded.contains("weight"))
+        assertFalse(encoded.contains("heart"))
+        assertFalse(encoded.contains("activity"))
+        assertFalse(encoded.contains("spo2"))
+    }
+
+    @Test
+    fun `enabled missing weight keeps the stable null field`() {
+        val encoded = json.encodeSelectedSummary(
+            summary = DailyHealthSummary(
+                date = "1405-05-28",
+                dateGregorian = "2026-08-19",
+                weight = null,
+            ),
+            includedMetrics = setOf(BackupMetric.WEIGHT),
+        )
+
+        assertTrue(encoded.contains("\"weight\":null"))
+    }
+
+    @Test
+    fun `default metric selection preserves the existing field order`() {
+        val encoded = json.encodeSelectedSummary(
+            summary = DailyHealthSummary(
+                date = "1405-05-28",
+                dateGregorian = "2026-08-19",
+                steps = 5816,
+                weight = 79.3,
+            ),
+            includedMetrics = BackupMetric.entries.toSet(),
+        )
+
+        assertTrue(encoded.contains("\"steps\":5816,\"weight\":79.3"))
+    }
+
+    @Test
+    fun `empty metric selection keeps only date identifiers`() {
+        val encoded = json.encodeSelectedSummary(
+            summary = DailyHealthSummary(
+                date = "1405-05-28",
+                dateGregorian = "2026-08-19",
+                steps = 5816,
+                weight = 79.3,
+            ),
+            includedMetrics = emptySet(),
+        )
+
+        assertTrue(encoded.contains("\"date\":\"1405-05-28\""))
+        assertTrue(encoded.contains("\"dateGregorian\":\"2026-08-19\""))
+        assertFalse(encoded.contains("steps"))
+        assertFalse(encoded.contains("weight"))
     }
 }

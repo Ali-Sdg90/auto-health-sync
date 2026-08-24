@@ -7,6 +7,8 @@ import com.autohealthsync.health.HealthConnectManager
 import com.autohealthsync.health.HealthPermissionRequiredException
 import com.autohealthsync.model.ActivitySeverity
 import com.autohealthsync.model.BackupSettings
+import com.autohealthsync.model.BackupMetric
+import com.autohealthsync.model.DailyHealthSummary
 import com.autohealthsync.notification.BackupNotificationManager
 import com.autohealthsync.storage.AppStateStore
 import com.autohealthsync.util.DateUtils
@@ -15,7 +17,11 @@ import java.time.Clock
 import java.time.LocalDate
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.encodeToJsonElement
+import kotlinx.serialization.json.jsonObject
 
 class BackupCoordinator(
     private val health: HealthConnectManager,
@@ -98,7 +104,7 @@ class BackupCoordinator(
     private suspend fun backupDate(date: LocalDate, settings: BackupSettings): DateBackupResult {
         stateStore.addActivity(ActivitySeverity.INFO, "Reading Health Connect", date.toString())
         val summary = health.readDailySummary(date)
-        val contents = json.encodeToString(summary)
+        val contents = json.encodeSelectedSummary(summary, settings.includedMetrics)
         val fileName = DateUtils.fileName(date, settings.fileDateSystem)
         stateStore.addActivity(ActivitySeverity.INFO, "Uploading to Google Drive", fileName)
         val upload = drive.upload(date, fileName, contents, settings.driveFolderName)
@@ -120,6 +126,26 @@ class BackupCoordinator(
     companion object {
         private const val TAG = "BackupCoordinator"
     }
+}
+
+internal fun Json.encodeSelectedSummary(
+    summary: DailyHealthSummary,
+    includedMetrics: Set<BackupMetric>,
+): String {
+    val allowedFields = buildSet {
+        add("date")
+        add("dateGregorian")
+        if (BackupMetric.STEPS in includedMetrics) add("steps")
+        if (BackupMetric.WEIGHT in includedMetrics) add("weight")
+        if (BackupMetric.ACTIVITY in includedMetrics) add("activity")
+        if (BackupMetric.HEART in includedMetrics) add("heart")
+        if (BackupMetric.SLEEP in includedMetrics) add("sleep")
+        if (BackupMetric.SPO2 in includedMetrics) add("spo2")
+    }
+    val selected = JsonObject(
+        encodeToJsonElement(summary).jsonObject.filterKeys(allowedFields::contains),
+    )
+    return encodeToString(JsonElement.serializer(), selected)
 }
 
 enum class BackupTrigger { MANUAL, SCHEDULED }
