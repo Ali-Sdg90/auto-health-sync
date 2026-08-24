@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.5.0](https://github.com/Ali-Sdg90/auto-health-sync/compare/v1.4.0...v1.5.0) (2026-08-24)
+
+
+### New Features
+
+* add feature to select which part of data user want to backup, add endgame todos ([ead6ed7](https://github.com/Ali-Sdg90/auto-health-sync/commit/ead6ed7e18d4123d06fba6798158bcc28675481d))
+* add onboarding page to app ([938af06](https://github.com/Ali-Sdg90/auto-health-sync/commit/938af0699086165c63189bd00b40d8f321c033fb))
+
+
+### Bug Fixes
+
+* **ui:** keep scrolling content within system bars ([d5a45ab](https://github.com/Ali-Sdg90/auto-health-sync/commit/d5a45abbb6c33bc0a9ea4f6807a01697c430b39e))
+
 ## [1.4.0](https://github.com/Ali-Sdg90/auto-health-sync/compare/v1.3.0...v1.4.0) (2026-08-23)
 
 
