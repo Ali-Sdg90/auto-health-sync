@@ -8,12 +8,19 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.IntentSenderRequest
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.safeDrawing
+import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Surface
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.core.net.toUri
 import androidx.health.connect.client.PermissionController
@@ -69,26 +76,33 @@ class MainActivity : ComponentActivity() {
                 LifecycleEventEffect(Lifecycle.Event.ON_RESUME) {
                     viewModel.refreshConnections()
                 }
-                Scaffold(
-                    containerColor = Color.Transparent,
-                    snackbarHost = { SnackbarHost(snackbar) },
-                ) { padding ->
-                    MainScreen(
-                        state = state,
-                        onHealthConnect = viewModel::requestHealthConnection,
-                        onDriveConnect = viewModel::requestDriveConnection,
-                        onOpenHealthConnect = viewModel::openHealthConnect,
-                        onOpenGoogleDrive = viewModel::openGoogleDrive,
-                        onBackupNow = viewModel::backupNow,
-                        onBackupDateChange = viewModel::selectBackupDate,
-                        onSaveSettings = viewModel::saveSettings,
-                        onRequestNotifications = viewModel::requestNotificationPermission,
-                        onOpenBatterySettings = viewModel::openBatterySettings,
-                        onOpenAutoStartSettings = viewModel::openAutoStartSettings,
-                        onConfirmAutoStart = viewModel::confirmAutoStart,
-                        onCompleteOnboarding = viewModel::completeOnboarding,
-                        contentPadding = padding,
-                    )
+                Surface(
+                    modifier = Modifier.fillMaxSize(),
+                    color = MaterialTheme.colorScheme.background,
+                ) {
+                    Scaffold(
+                        modifier = Modifier.windowInsetsPadding(WindowInsets.safeDrawing),
+                        containerColor = Color.Transparent,
+                        contentWindowInsets = WindowInsets(0, 0, 0, 0),
+                        snackbarHost = { SnackbarHost(snackbar) },
+                    ) { padding ->
+                        MainScreen(
+                            state = state,
+                            onHealthConnect = viewModel::requestHealthConnection,
+                            onDriveConnect = viewModel::requestDriveConnection,
+                            onOpenHealthConnect = viewModel::openHealthConnect,
+                            onOpenGoogleDrive = viewModel::openGoogleDrive,
+                            onBackupNow = viewModel::backupNow,
+                            onBackupDateChange = viewModel::selectBackupDate,
+                            onSaveSettings = viewModel::saveSettings,
+                            onRequestNotifications = viewModel::requestNotificationPermission,
+                            onOpenBatterySettings = viewModel::openBatterySettings,
+                            onOpenAutoStartSettings = viewModel::openAutoStartSettings,
+                            onConfirmAutoStart = viewModel::confirmAutoStart,
+                            onCompleteOnboarding = viewModel::completeOnboarding,
+                            contentPadding = padding,
+                        )
+                    }
                 }
             }
         }
