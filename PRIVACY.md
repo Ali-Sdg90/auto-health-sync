@@ -7,7 +7,7 @@ Auto Health Sync processes health data only to create the backups explicitly des
 - Raw heart-rate samples, sleep-stage events, routes, GPS points, and other high-frequency measurements are not uploaded. They are reduced to daily summaries in memory.
 - Daily summary files are uploaded directly from the device to a folder created by the app in the user's Google Drive.
 - The app requests the limited Google Drive `drive.file` scope and cannot access unrelated Drive files.
-- OAuth access tokens are not stored by the app.
+- Auto Health Sync does not independently store Google OAuth access tokens.
 - Recent Activity contains operational messages only and never raw health values.
 - There is no developer-operated server, advertising, analytics, telemetry, or sale of data.
 

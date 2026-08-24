@@ -1,0 +1,201 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#006b5b">
+    <meta name="description" content="Auto Health Sync is a personal health data pipeline that turns selected Health Connect data into daily JSON files in your Google Drive.">
+    <meta property="og:title" content="Auto Health Sync">
+    <meta property="og:description" content="A personal health data pipeline from Health Connect to daily JSON files in your Google Drive.">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://ali-sdg90.github.io/auto-health-sync/">
+    <link rel="canonical" href="https://ali-sdg90.github.io/auto-health-sync/">
+    <link rel="icon" href="./assets/app-icon.png" type="image/png">
+    <link rel="stylesheet" href="./assets/styles.css">
+    <title>Auto Health Sync · Personal Health Data Pipeline</title>
+  </head>
+  <body>
+    <header class="site-header">
+      <nav class="nav" aria-label="Main navigation">
+        <a class="brand" href="./" aria-label="Auto Health Sync home">
+          <img src="./assets/app-icon.png" alt="" width="38" height="38">
+          <span>Auto Health Sync</span>
+        </a>
+        <div class="nav-links">
+          <a href="./" aria-current="page">Home</a>
+          <a href="./privacy/">Privacy</a>
+          <a href="https://github.com/Ali-Sdg90/auto-health-sync" target="_blank" rel="noopener noreferrer">GitHub</a>
+        </div>
+      </nav>
+    </header>
+
+    <main>
+      <section class="hero container">
+        <div class="hero-copy">
+          <p class="eyebrow">Your personal health data pipeline</p>
+          <h1>Turn your health data into files you control.</h1>
+          <p>Auto Health Sync creates a direct pipeline from Health Connect to your Google Drive: it collects the data you choose, turns each day into a compact, readable JSON file, and keeps the flow running on your schedule.</p>
+          <div class="actions">
+            <a class="button button-primary" href="https://github.com/Ali-Sdg90/auto-health-sync/releases/latest">
+              Get the latest release
+              <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M5 12h14M13 6l6 6-6 6"/>
+              </svg>
+            </a>
+            <a class="button button-secondary" href="./privacy/">How your data is handled</a>
+          </div>
+        </div>
+
+        <div class="screenshot-stage">
+          <!-- Screenshot placeholder: replace .screenshot-placeholder with a portrait PNG of the real app main screen showing Health Connect and Google Drive connected, Next Backup, Report date, Back up now, and Recent Activity. Prefer an uncropped 1080 × 2400 screenshot with no device mockup. -->
+          <div class="screenshot-placeholder" role="img" aria-label="Reserved space for a future screenshot of the app's main screen">
+            <div class="placeholder-content">
+              <span class="placeholder-mark" aria-hidden="true"></span>
+              <strong>App screenshot</strong>
+              <span>Main screen · portrait</span>
+            </div>
+          </div>
+          <!-- <p class="screenshot-caption">A real product screenshot will go here.</p> -->
+        </div>
+      </section>
+
+      <div class="pipeline" aria-label="Personal health data pipeline">
+        <div class="pipeline-inner container">
+          <span>Compatible health apps</span>
+          <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg>
+          <span>Health Connect</span>
+          <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg>
+          <span>Daily JSON</span>
+          <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg>
+          <span>Your Google Drive</span>
+        </div>
+      </div>
+
+      <section class="section container" id="features">
+        <p class="section-kicker">One clear purpose</p>
+        <h2>A simple bridge from Health Connect to files you can use.</h2>
+        <p class="section-lead">Compatible apps can keep writing health and fitness data to Health Connect. Auto Health Sync handles the next step: collecting a daily summary and placing it in your Drive.</p>
+        <div class="feature-grid">
+          <article class="feature-card">
+            <span class="feature-card-icon">
+              <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2Z"/>
+              </svg>
+            </span>
+            <h3>Read from Health Connect</h3>
+            <p>Read the Health Connect categories you approve, including steps, activity, heart, sleep, blood oxygen, and weight.</p>
+          </article>
+          <article class="feature-card">
+            <span class="feature-card-icon">
+              <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>
+              </svg>
+            </span>
+            <h3>Create plain JSON</h3>
+            <p>Turn each day into one compact, readable file with useful summaries instead of a large archive of raw sensor samples.</p>
+          </article>
+          <article class="feature-card">
+            <span class="feature-card-icon">
+              <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z"/><path d="m9 12 2 2 4-4"/>
+              </svg>
+            </span>
+            <h3>Save it to your Drive</h3>
+            <p>Upload or update the daily file directly in your Google Drive. Automatic scheduling, retries, and recent-day recovery keep the process dependable.</p>
+          </article>
+        </div>
+      </section>
+
+      <section class="section utility-section container">
+        <div class="utility-grid">
+          <div class="utility-copy">
+            <p class="section-kicker">Useful after the backup</p>
+            <h2>Plain files leave your options open.</h2>
+            <p>Because the output is ordinary JSON in your Drive, you can use it later with tools you choose and authorize:</p>
+            <ul class="use-list">
+              <li>Personal health dashboards</li>
+              <li>Daily or weekly reports</li>
+              <li>Scripts and scheduled automations</li>
+              <li>AI assistants or agents with access to the folder</li>
+            </ul>
+            <p class="utility-note">Auto Health Sync does not connect to those tools itself. It simply creates the files so your own workflows can use them.</p>
+          </div>
+          <div class="json-window" aria-label="Example of a daily JSON backup">
+            <div class="json-window-header">
+              <span>health-data-1405-06-02.json</span>
+              <span>JSON</span>
+            </div>
+            <pre><code>{
+  "date": "1405-06-02",
+  "dateGregorian": "2026-08-24",
+  "steps": 8432,
+  "weight": 79.5,
+  "activity": {
+    "exerciseMinutes": 52,
+    "distanceKm": 5.4
+  },
+  "heart": {
+    "resting": 52,
+    "average": 81,
+    "min": 46,
+    "max": 138
+  },
+  "sleep": {
+    "bedTime": "00:18",
+    "wakeTime": "07:56",
+    "totalMinutes": 458,
+    "deepMinutes": 94,
+    "remMinutes": 87
+  }
+}</code></pre>
+          </div>
+        </div>
+      </section>
+
+      <section class="section container">
+        <div class="privacy-callout">
+          <div>
+            <p class="section-kicker">No server in the middle</p>
+            <h2>Your health data goes to your Drive, not ours.</h2>
+            <p>The summary is created on your Android device and uploaded directly to your Google Drive using the limited <strong>drive.file</strong> permission. Auto Health Sync has no developer-operated backend or cloud database and never receives a copy of your health data.</p>
+            <a class="text-link" href="./privacy/">
+              See exactly how data is handled
+              <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M5 12h14M13 6l6 6-6 6"/>
+              </svg>
+            </a>
+          </div>
+          <div class="privacy-points" aria-label="Privacy highlights">
+            <div class="privacy-point">
+              <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m5 12 4 4L19 6"/></svg>
+              No developer-operated server
+            </div>
+            <div class="privacy-point">
+              <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m5 12 4 4L19 6"/></svg>
+              Backup files stay in your Google Drive
+            </div>
+            <div class="privacy-point">
+              <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m5 12 4 4L19 6"/></svg>
+              No analytics, advertising, or tracking
+            </div>
+            <div class="privacy-point">
+              <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m5 12 4 4L19 6"/></svg>
+              Read-only Health Connect access
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <div class="footer-inner container">
+        <span>© 2026 Ali Sadeghi · Auto Health Sync</span>
+        <div class="footer-links">
+          <a href="./privacy/">Privacy</a>
+          <a href="mailto:ali.sdg.dev90@gmail.com">Support</a>
+          <a href="https://github.com/Ali-Sdg90/auto-health-sync">Source code</a>
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>
