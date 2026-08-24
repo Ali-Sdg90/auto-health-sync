@@ -1,3 +1,3 @@
 -keepattributes Signature,*Annotation*
--keep class com.autohealthsync.model.** { *; }
+-keep class com.alisadeghi.autohealthsync.model.** { *; }
 

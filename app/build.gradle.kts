@@ -35,11 +35,11 @@ val hasReleaseSigning = listOf(
 ).all { it.isPresent }
 
 android {
-    namespace = "com.autohealthsync"
+    namespace = "com.alisadeghi.autohealthsync"
     compileSdk = 36
 
     defaultConfig {
-        applicationId = "com.autohealthsync"
+        applicationId = "com.alisadeghi.autohealthsync"
         minSdk = 28
         targetSdk = 36
         versionCode = calculatedVersionCode.toInt()

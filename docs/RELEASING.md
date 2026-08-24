@@ -119,7 +119,7 @@ keytool -list -v `
   -alias auto-health-sync
 ```
 
-Register its SHA-1 as an Android OAuth client for package `com.autohealthsync` in the Google Cloud project. Without this registration, Google Drive authorization will fail in the signed release even if debug builds work.
+Register its SHA-1 as an Android OAuth client for package `com.alisadeghi.autohealthsync` in the Google Cloud project. Without this registration, Google Drive authorization will fail in the signed release even if debug builds work.
 
 ## Release assets
 

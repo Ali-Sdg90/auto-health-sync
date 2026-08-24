@@ -44,7 +44,7 @@ Google Drive authorization cannot work until the installed APK is registered wit
 1. Create or select a project in [Google Cloud Console](https://console.cloud.google.com/).
 2. Enable **Google Drive API**.
 3. Configure the OAuth consent screen and declare only `https://www.googleapis.com/auth/drive.file`.
-4. Create an **Android OAuth client** with package name `com.autohealthsync`.
+4. Create an **Android OAuth client** with package name `com.alisadeghi.autohealthsync`.
 5. Add the SHA-1 fingerprint of the signing key. For the debug build, run:
 
    ```powershell

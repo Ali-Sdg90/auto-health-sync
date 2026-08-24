@@ -22,35 +22,65 @@
 
 - [x] Add Apache License 2.0 to the repository.
 
----------------------
+---
 
 END GAME:
 
-Code
-- [ ] Merge final changes
-- [ ] Update release PR/changelog
-- [ ] Build final signed release
+Identity & Signing
+
+- [x] Finalize com.alisadeghi.autohealthsync
+- [x] Finalize one release signing key
+- [x] Back up keystore + passwords in 2 secure locations
+- [ ] ~~Android Developer Verification~~
 
 Website
-- [ ] Homepage
-- [ ] Privacy Policy
+
+- [ ] Public homepage on owned/verified domain
+- [ ] Public Privacy Policy
+- [ ] Add support/contact information
 
 App
-- [ ] Privacy link inside app
+
+- [ ] Add Privacy link inside app
+- [ ] Verify final onboarding and backup-data selection
+
+Code & Release
+
+- [ ] Merge final changes
+- [ ] Update Release PR / changelog to v1.5.0
+- [ ] Build final signed APK/AAB
+- [ ] Verify signatures and checksums
 
 Google
-- [ ] OAuth Production
-- [ ] Branding / support info
-- [ ] Release SHA-1
-- [ ] Verify OAuth
 
-Identity
-- [ ] Finalize com.autohealthsync
-- [ ] Backup release keystore
-- [ ] Android Developer Verification
+- [ ] Configure production Google Cloud project
+- [ ] Set OAuth to External / In production
+- [ ] Complete branding and support information
+- [ ] Register release SHA-1
+- [ ] Register Play/Samsung SHA-1 too, if their signing key differs
+- [ ] Verify OAuth with the release-signed build
+
+Store Preparation
+
+- [ ] App icon, screenshots and feature graphic
+- [ ] Persian and English descriptions
+- [ ] Privacy/support URLs
+- [ ] Category, age rating and content declarations
+- [ ] Data Safety / Health Apps Declaration where required
+- [ ] Health Connect permission justifications
+- [ ] Reviewer instructions
+- [ ] “Not a medical device” disclaimer in store description
 
 QA
-- [ ] Test RELEASE build on clean/upgrade/devices
+
+- [ ] Clean-install the RELEASE build
+- [ ] Test upgrade from the previous release
+- [ ] Test scheduled backup after reboot/Doze
+- [ ] Test revoked permissions, expired OAuth and offline states
+- [ ] Test Android 9/13/14/16
+- [ ] Test on Xiaomi and Samsung
+- [ ] Clearly document requirement for Google Play services
 
 Then:
+
 - [ ] Publish to stores 🚀
