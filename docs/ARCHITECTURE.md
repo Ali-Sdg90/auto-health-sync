@@ -1,6 +1,6 @@
 # Architecture
 
-Auto Health Sync is a local-first Android app that creates one health summary per day and stores it in Google Drive.
+Auto Health Sync is an Android app that creates one health summary per day and stores it in Google Drive.
 
 ## Data flow
 

@@ -1,139 +1,167 @@
 # Auto Health Sync
 
-[![CI](https://github.com/Ali-Sdg90/auto-health-sync/actions/workflows/ci.yml/badge.svg)](https://github.com/Ali-Sdg90/auto-health-sync/actions/workflows/ci.yml)
-[![GitHub release](https://img.shields.io/github/v/release/Ali-Sdg90/auto-health-sync?display_name=tag&sort=semver)](https://github.com/Ali-Sdg90/auto-health-sync/releases)
-[![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
+<p align="center"><strong>An Android health data pipeline from Health Connect to your Google Drive.</strong></p>
 
-Auto Health Sync is a focused Android utility that creates one compact health summary per day from Health Connect and stores it in the user's Google Drive.
+<p align="center">
+  <a href="https://github.com/Ali-Sdg90/auto-health-sync/actions/workflows/ci.yml"><img alt="CI status" src="https://github.com/Ali-Sdg90/auto-health-sync/actions/workflows/ci.yml/badge.svg"></a>
+  <a href="https://github.com/Ali-Sdg90/auto-health-sync/releases/latest"><img alt="Latest release" src="https://img.shields.io/github/v/release/Ali-Sdg90/auto-health-sync?display_name=tag&sort=semver"></a>
+  <img alt="Android 9 or newer" src="https://img.shields.io/badge/Android-9%2B-3DDC84?logo=android&logoColor=white">
+  <a href="LICENSE"><img alt="Apache 2.0 license" src="https://img.shields.io/badge/License-Apache_2.0-blue.svg"></a>
+</p>
 
-It follows one deliberately small pipeline:
+<p align="center">
+  <a href="https://ali-sdg.is-a.dev/auto-health-sync/">Website</a> ·
+  <a href="https://github.com/Ali-Sdg90/auto-health-sync/releases/latest">Download</a> ·
+  <a href="https://ali-sdg.is-a.dev/auto-health-sync/privacy/">Privacy</a> ·
+  <a href="https://ali-sdg.is-a.dev/auto-health-sync/terms/">Terms</a>
+</p>
 
-**Read → Summarize → Serialize → Upload → Log**
+<p align="center">
+  <img src="docs/assets/og-image.jpg" alt="Auto Health Sync pipeline: Health Connect to daily JSON to Google Drive" width="100%">
+</p>
 
-## What version 1 does
+Auto Health Sync creates a direct pipeline from Health Connect to Google Drive. It reads the health categories the user approves, reduces each selected day to a compact JSON summary, and uploads the file directly to a user-owned Drive folder.
 
-- Reads steps, distance, workouts, heart rate, resting heart rate, sleep, SpO₂, and the latest daily weight from Health Connect.
-- Reads all sources available through Health Connect; source permissions, stored data, and activity priorities are managed in Health Connect settings.
-- Generates `health-data-YYYY-MM-DD.json` using the user-selected Jalali or Gregorian filename date; the JSON always includes an unambiguous Gregorian date.
-- Lets the user include or exclude steps, weight, activity, heart, sleep, and blood oxygen from every backup; all groups are enabled by default.
-- Creates or reuses a configurable Google Drive folder, defaulting to `Auto: Health Data`, using the narrow `drive.file` scope.
-- Updates an existing daily file instead of creating duplicates.
-- Lets the user choose any report date from the main screen, defaulting to today, and requests Health Connect history access for older records.
-- Runs at a configurable daily time (23:00 by default) in `Asia/Tehran`, survives process restarts through WorkManager, and repairs its next scheduled job whenever the app opens.
-- Gates the first launch behind a guided setup for Health Connect, Google Drive, unrestricted battery use, and manufacturer-specific Auto Start when available.
-- Opens Health Connect data management and the backup folder in Google Drive directly from their connected status controls.
-- Retries recoverable automatic failures five times at roughly three-minute intervals.
-- Checks only the previous two days for missing backups.
-- Keeps the latest 50 operational events locally and sends notifications only for final failures, access problems, and recovered missing days.
+The app keeps this pipeline deliberately small: no developer backend, no analytics, no advertising, read-only Health Connect access, and the narrow Google Drive `drive.file` scope.
 
-The app never writes to Health Connect, never stores raw sensor samples, and has no backend, Firebase, analytics, or user database.
+## Core capabilities
 
-## Requirements
+- Reads steps, weight, distance, workouts, heart rate, resting heart rate, sleep stages, and blood oxygen from Health Connect.
+- Lets users choose which health categories appear in every backup.
+- Creates one readable JSON file per day with Jalali or Gregorian filename dates and an unambiguous Gregorian date inside the file.
+- Supports manual backups for a selected date and automatic daily backups on a configurable schedule in `Asia/Tehran`.
+- Updates an existing daily file instead of creating duplicates, automatically retries recoverable scheduled failures, and checks the previous two days for missing backups.
+- Guides first-run setup for Health Connect, Google Drive, battery restrictions, and supported OEM Auto Start settings.
+- Keeps recent operational activity on the device and sends notifications only for important failures, access problems, and recovered backups.
 
-- Android Studio with JDK 17
-- Android SDK 36
-- Android 9 (API 28) or newer test device
-- Health Connect (built into Android 14+, available as an app on compatible older versions)
-- At least one health or wearable app writing data into Health Connect
-- A Google Cloud project with the Google Drive API enabled
+## Product gallery
 
-## Google Cloud setup
+<table>
+  <tr>
+    <td align="center"><a href="docs/assets/gallery/app-screenshot-1.jpg"><img src="docs/assets/gallery/app-screenshot-1.jpg" alt="Guided first-run setup" width="210"></a></td>
+    <td align="center"><a href="docs/assets/gallery/app-screenshot-2.jpg"><img src="docs/assets/gallery/app-screenshot-2.jpg" alt="Backup dashboard and recent activity" width="210"></a></td>
+    <td align="center"><a href="docs/assets/gallery/app-screenshot-3.jpg"><img src="docs/assets/gallery/app-screenshot-3.jpg" alt="Backup schedule and file settings" width="210"></a></td>
+    <td align="center"><a href="docs/assets/gallery/app-screenshot-4.jpg"><img src="docs/assets/gallery/app-screenshot-4.jpg" alt="Selectable health data categories" width="210"></a></td>
+  </tr>
+  <tr>
+    <td align="center"><sub><strong>Guided setup</strong></sub></td>
+    <td align="center"><sub><strong>Backup dashboard</strong></sub></td>
+    <td align="center"><sub><strong>Backup settings</strong></sub></td>
+    <td align="center"><sub><strong>Data selection</strong></sub></td>
+  </tr>
+</table>
 
-Google Drive authorization cannot work until the installed APK is registered with Google:
+## Data pipeline
 
-1. Create or select a project in [Google Cloud Console](https://console.cloud.google.com/).
-2. Enable **Google Drive API**.
-3. Configure the OAuth consent screen and declare only `https://www.googleapis.com/auth/drive.file`.
-4. Create an **Android OAuth client** with package name `com.alisadeghi.autohealthsync`.
-5. Add the SHA-1 fingerprint of the signing key. For the debug build, run:
-
-   ```powershell
-   .\gradlew.bat signingReport
-   ```
-
-No OAuth client secret or access token belongs in this repository. Google Identity Services identifies the app from its signed package registration, and the app requests a fresh short-lived access token when each backup runs.
-
-## Build
-
-```powershell
-$env:ANDROID_HOME = "C:\Android" # adjust for your SDK
-.\gradlew.bat testDebugUnitTest assembleDebug
+```text
+Compatible health apps
+        ↓
+Health Connect (read only)
+        ↓
+Daily aggregation on the Android device
+        ↓
+Compact JSON summary
+        ↓
+User-owned Google Drive folder
 ```
 
-The debug APK is produced at `app/build/outputs/apk/debug/app-debug.apk`.
-
-## CI/CD and releases
-
-Pull requests are tested, linted, and built by GitHub Actions. PR titles must use Conventional Commits because the repository uses squash merges and Release Please derives the next version and changelog from the resulting commit on `main`.
-
-- `fix(scope): ...` creates a patch release.
-- `feat(scope): ...` creates a minor release.
-- `feat(scope)!: ...` creates a breaking major release.
-- `perf(scope): ...` and `revert: ...` create a patch release.
-- `docs:`, `test:`, `ci:`, `build:`, `refactor:`, and `chore:` do not trigger a release by themselves.
-
-Release Please keeps a release PR current. Merging that PR creates a SemVer tag and GitHub Release. A separate protected workflow checks out that exact tag, repeats tests and release lint, builds signed APK and AAB files, verifies both signatures, generates SHA-256 checksums and build provenance, and uploads the assets to the GitHub Release.
-
-Maintainer setup, signing-secret names, branch rules, recovery instructions, and the complete release flow are documented in [docs/RELEASING.md](docs/RELEASING.md).
-
-Project documentation: [Architecture](docs/ARCHITECTURE.md) · [Contributing](CONTRIBUTING.md) · [Security](SECURITY.md) · [Releasing](docs/RELEASING.md)
-
-## First-run checklist
-
-1. Follow the in-app setup and grant all requested Health Connect read permissions, including background and history access.
-2. Authorize Google Drive `drive.file` access.
-3. Open battery settings and select **Unrestricted** for Auto Health Sync.
-4. On supported manufacturer builds, enable **Auto Start** and confirm the step in the app.
-5. Optionally allow backup-status notifications, then finish setup.
-6. Keep **Report date** on today or choose a past date, run a manual backup, and verify the dated JSON in Drive.
-
-Health Connect permissions can be revoked at any time. The app checks access before every operation and fails visibly rather than crashing or silently skipping a backup.
-
-## JSON shape
-
-Disabled data groups and sections with no meaningful source data are omitted:
-
-When weight is enabled, it is always present and is `null` when no weight was recorded that day. Disabling weight removes the field completely.
-
-When a day contains multiple distinct sleep sessions, total sleep and every available sleep-stage summary are summed across all sessions; overlapping duplicate records are counted only once.
+Each selected date produces a file such as `health-data-1405-06-02.json`:
 
 ```json
 {
-    "date": "1405-05-27",
-    "dateGregorian": "2026-08-18",
-    "steps": 8432,
-    "weight": 78.4,
-    "activity": {
-        "exerciseMinutes": 52,
-        "distanceKm": 6.3,
-        "workouts": [{ "type": "walking", "durationMinutes": 50 }]
-    },
-    "heart": { "resting": 61, "average": 72, "min": 48, "max": 137 },
-    "sleep": {
-        "bedTime": "01:14",
-        "wakeTime": "08:42",
-        "totalMinutes": 461,
-        "napMinutes": 32,
-        "deepMinutes": 91,
-        "lightMinutes": 240,
-        "remMinutes": 78,
-        "awakeMinutes": 19
-    },
-    "spo2": { "average": 97.0, "min": 94.0 }
+  "date": "1405-06-02",
+  "dateGregorian": "2026-08-24",
+  "steps": 8432,
+  "weight": 79.5,
+  "activity": {
+    "exerciseMinutes": 52,
+    "distanceKm": 5.4,
+    "workouts": [
+      { "type": "walking", "durationMinutes": 47 }
+    ]
+  },
+  "heart": {
+    "resting": 52,
+    "average": 81,
+    "min": 46,
+    "max": 138
+  },
+  "sleep": {
+    "bedTime": "00:18",
+    "wakeTime": "07:56",
+    "totalMinutes": 458,
+    "deepMinutes": 94,
+    "remMinutes": 87
+  },
+  "spo2": {
+    "average": 97.6,
+    "min": 95.0
+  }
 }
 ```
 
-## Important release notes
+Disabled categories are omitted. When weight is enabled but unavailable for the selected day, the field remains present as `null`.
 
-- A Play Store release must complete Google's Health Connect declaration and provide a public privacy policy matching [PRIVACY.md](PRIVACY.md).
-- Register the release signing certificate SHA-1 as another Android OAuth client before testing the release build.
-- The first-run setup requires unrestricted battery use and supported OEM Auto Start controls, but Android may still delay work in exceptional system conditions. WorkManager reliability is preferred over exact-alarm permissions.
-- Real Health Connect and Drive behavior must be validated on a physical device. Unit tests cover deterministic date conversion, scheduling boundaries, the two-day recovery window, and omission of absent JSON metrics.
+## Architecture
 
-For the complete product intent and constraints, see [vision.md](vision.md).
+| Component | Responsibility |
+| --- | --- |
+| `HealthConnectManager` | Permissions, record reads, daily aggregation, and overlap-safe sleep handling |
+| `DailyHealthSummary` | Stable serializable contract for the daily report |
+| `BackupCoordinator` | Access validation, selected-field serialization, recovery, and orchestration |
+| `DriveBackupManager` | Drive folder discovery and idempotent file creation or update |
+| `BackupScheduler` / `BackupWorker` | WorkManager scheduling and retry execution |
+| `AppStateStore` | DataStore-backed settings, backup state, and recent activity |
+| `MainScreen` / `MainViewModel` | Compose UI, onboarding, settings, and manual backup flow |
+
+**Stack:** Kotlin · Jetpack Compose · Material 3 · Health Connect · WorkManager · DataStore · Google Identity Services · Google Drive API · kotlinx.serialization · OkHttp
+
+## Privacy by design
+
+- Health Connect access is read only; the app never changes health records.
+- Daily summaries are created locally and uploaded directly to the user's Google Drive.
+- Google Drive access uses `drive.file`, limiting the app to files it creates or the user opens with it.
+- There is no developer-operated backend, analytics, advertising SDK, telemetry, or independent app account.
+- Health permissions and Google authorization can be revoked at any time.
+
+See the public [Privacy Policy](https://ali-sdg.is-a.dev/auto-health-sync/privacy/) for the complete data-handling details.
+
+## Getting started
+
+### Install the app
+
+Download the signed APK and its checksum from the [latest GitHub Release](https://github.com/Ali-Sdg90/auto-health-sync/releases/latest). The app requires Android 9 or newer, Health Connect, and a Google account for Drive backups.
+
+### Build from source
+
+Requirements: JDK 17, Android SDK 36, and a compatible Android device or emulator.
+
+```bash
+git clone https://github.com/Ali-Sdg90/auto-health-sync.git
+cd auto-health-sync
+./gradlew testDebugUnitTest lintDebug assembleDebug
+```
+
+On Windows, use `gradlew.bat`. The debug APK is written to `app/build/outputs/apk/debug/app-debug.apk`.
+
+Google Drive authorization for a locally signed build requires the Drive API to be enabled and an Android OAuth client registered for package `com.alisadeghi.autohealthsync` and the signing certificate SHA-1. No OAuth client secret belongs in the repository.
+
+## Quality and delivery
+
+CI runs unit tests, Android lint, and distributable builds. Release Please manages versioned release PRs, while the protected release workflow builds signed APK and AAB artifacts, verifies their signatures, generates SHA-256 checksums, and publishes build provenance.
+
+Detailed maintainer instructions are available in [docs/RELEASING.md](docs/RELEASING.md).
+
+## Documentation
+
+[Architecture](docs/ARCHITECTURE.md) · [Product vision](vision.md) · [Contributing](CONTRIBUTING.md) · [Security](SECURITY.md) · [Privacy](PRIVACY.md) · [Changelog](CHANGELOG.md)
+
+## Disclaimer
+
+Auto Health Sync is a personal data utility, not a medical device or a substitute for professional medical advice. Users should verify important backup files before relying on them.
 
 ## License
 
 Copyright 2026 Ali Sadeghi.
 
-Licensed under the [Apache License 2.0](LICENSE). You may use, modify, and distribute this project under the terms of that license.
+Licensed under the [Apache License 2.0](LICENSE).

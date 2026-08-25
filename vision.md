@@ -60,7 +60,7 @@ Do not use deprecated Google Sign-In APIs.
 
 Do not introduce a backend, Firebase, server, analytics service, or unnecessary infrastructure.
 
-This is a single-user utility and should remain local-first.
+This is a single-user utility. Health data should be processed on the device and uploaded directly to the user's Google Drive.
 
 ---
 
