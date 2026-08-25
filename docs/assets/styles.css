@@ -234,66 +234,14 @@ h1 {
   margin-left: auto;
 }
 
-.screenshot-placeholder {
-  position: relative;
-  overflow: hidden;
-  display: grid;
-  width: min(100%, 330px);
-  aspect-ratio: 9 / 16;
-  margin-left: auto;
-  border: 1px dashed rgba(0, 107, 91, 0.38);
-  border-radius: 30px;
-  background:
-    linear-gradient(145deg, rgba(157, 242, 220, 0.15), transparent 48%),
-    var(--surface);
-  box-shadow: var(--shadow);
-  place-items: center;
-}
-
-.screenshot-placeholder::before,
-.screenshot-placeholder::after {
-  position: absolute;
-  right: 24px;
-  left: 24px;
-  height: 1px;
-  background: var(--line);
-  content: "";
-}
-
-.screenshot-placeholder::before {
-  top: 72px;
-}
-
-.screenshot-placeholder::after {
-  bottom: 72px;
-}
-
-.placeholder-content {
-  display: grid;
-  justify-items: center;
-  color: var(--muted);
-  gap: 7px;
-  text-align: center;
-}
-
-.placeholder-mark {
+.app-screenshot {
   display: block;
-  width: 38px;
-  height: 48px;
-  margin-bottom: 7px;
-  border: 1.5px solid var(--primary);
-  border-radius: 8px;
-  opacity: 0.78;
-}
-
-.placeholder-content strong {
-  color: var(--text);
-  font-size: 0.95rem;
-  letter-spacing: -0.01em;
-}
-
-.placeholder-content span:last-child {
-  font-size: 0.76rem;
+  width: min(100%, 330px);
+  height: auto;
+  margin-left: auto;
+  border: 1px solid var(--line);
+  border-radius: 30px;
+  box-shadow: var(--shadow);
 }
 
 .screenshot-caption {
@@ -628,6 +576,7 @@ h1 {
 }
 
 .updated {
+  display: inline-block;
   color: var(--muted);
   font-size: 0.82rem;
   font-weight: 650;
@@ -794,6 +743,108 @@ h1 {
   margin-bottom: 6px;
 }
 
+@media (prefers-reduced-motion: no-preference) {
+  @keyframes intro-rise {
+    from {
+      opacity: 0;
+      transform: translateY(14px);
+    }
+
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes intro-header {
+    from {
+      opacity: 0;
+      transform: translateY(-7px);
+    }
+
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes intro-screenshot {
+    from {
+      opacity: 0;
+      transform: translate3d(18px, 10px, 0) scale(0.985);
+    }
+
+    to {
+      opacity: 1;
+      transform: translate3d(0, 0, 0) scale(1);
+    }
+  }
+
+  .site-header {
+    animation: intro-header 480ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+
+  .hero-copy > .eyebrow,
+  .hero-copy > h1,
+  .hero-copy > p:not(.eyebrow),
+  .hero-copy > .actions,
+  .policy-hero > h1,
+  .policy-hero > p,
+  .policy-hero > .updated,
+  .quick-facts,
+  .policy-layout {
+    animation: intro-rise 680ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+
+  .hero-copy > .eyebrow {
+    animation-delay: 70ms;
+  }
+
+  .hero-copy > h1,
+  .policy-hero > h1 {
+    animation-delay: 130ms;
+  }
+
+  .hero-copy > p:not(.eyebrow),
+  .policy-hero > p {
+    animation-delay: 190ms;
+  }
+
+  .hero-copy > .actions,
+  .policy-hero > .updated {
+    animation-delay: 250ms;
+  }
+
+  .app-screenshot {
+    animation: intro-screenshot 780ms cubic-bezier(0.22, 1, 0.36, 1) 160ms both;
+  }
+
+  .quick-facts {
+    animation-delay: 300ms;
+  }
+
+  .policy-layout {
+    animation-delay: 370ms;
+  }
+
+  .reveal-ready [data-reveal] {
+    opacity: 0;
+    transform: translateY(26px);
+    transition:
+      opacity 820ms cubic-bezier(0.22, 1, 0.36, 1),
+      transform 820ms cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  .reveal-ready [data-reveal="compact"] {
+    transform: translateY(14px);
+  }
+
+  .reveal-ready [data-reveal].is-visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 @media (prefers-color-scheme: dark) {
   :root {
     --bg: #020e0b;
@@ -833,13 +884,6 @@ h1 {
     background: #9df2dc;
   }
 
-  .screenshot-placeholder {
-    border-color: rgba(114, 220, 194, 0.3);
-    background:
-      linear-gradient(145deg, rgba(25, 99, 80, 0.18), transparent 48%),
-      rgba(8, 30, 24, 0.72);
-  }
-
   .pipeline {
     background: rgba(14, 51, 41, 0.18);
   }
@@ -874,7 +918,7 @@ h1 {
     margin-inline: auto;
   }
 
-  .screenshot-placeholder,
+  .app-screenshot,
   .screenshot-caption {
     margin-inline: auto;
   }
@@ -1045,6 +1089,8 @@ h1 {
   *,
   *::before,
   *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
     scroll-behavior: auto !important;
     transition-duration: 0.01ms !important;
   }
