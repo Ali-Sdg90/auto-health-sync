@@ -8,6 +8,7 @@ Auto Health Sync reads user-approved Health Connect categories, creates compact 
 
 - [Homepage](https://ali-sdg.is-a.dev/auto-health-sync/): Product overview, data flow, features, and downloads.
 - [Privacy Policy](https://ali-sdg.is-a.dev/auto-health-sync/privacy/): Data access, processing, storage, security, retention, and user controls.
+- [Terms of Service](https://ali-sdg.is-a.dev/auto-health-sync/terms/): Conditions, responsibilities, third-party services, disclaimers, and limitations.
 
 ## Project resources
 
