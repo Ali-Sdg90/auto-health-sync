@@ -125,9 +125,9 @@ Register its SHA-1 as an Android OAuth client for package `com.alisadeghi.autohe
 
 Each GitHub Release receives:
 
-- `auto-health-sync-vX.Y.Z.apk` — signed, directly installable Android package
-- `auto-health-sync-vX.Y.Z.aab` — signed app bundle for future store distribution
-- `auto-health-sync-vX.Y.Z-mapping.txt` — R8 mapping for deobfuscating release crashes
+- `health-data-relay-vX.Y.Z.apk` — signed, directly installable Android package
+- `health-data-relay-vX.Y.Z.aab` — signed app bundle for future store distribution
+- `health-data-relay-vX.Y.Z-mapping.txt` — R8 mapping for deobfuscating release crashes
 - `SHA256SUMS.txt` — checksums for the three files
 - GitHub build-provenance attestations for the APK and AAB
 

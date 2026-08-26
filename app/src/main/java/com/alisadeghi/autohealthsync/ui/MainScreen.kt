@@ -34,6 +34,7 @@ import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material.icons.rounded.Cloud
 import androidx.compose.material.icons.rounded.CalendarMonth
 import androidx.compose.material.icons.rounded.BatteryChargingFull
+import androidx.compose.material.icons.rounded.Description
 import androidx.compose.material.icons.rounded.ErrorOutline
 import androidx.compose.material.icons.rounded.Favorite
 import androidx.compose.material.icons.rounded.Folder
@@ -41,6 +42,7 @@ import androidx.compose.material.icons.rounded.HealthAndSafety
 import androidx.compose.material.icons.rounded.History
 import androidx.compose.material.icons.rounded.Info
 import androidx.compose.material.icons.rounded.NotificationsActive
+import androidx.compose.material.icons.rounded.PrivacyTip
 import androidx.compose.material.icons.rounded.Refresh
 import androidx.compose.material.icons.rounded.RocketLaunch
 import androidx.compose.material.icons.rounded.Schedule
@@ -481,7 +483,7 @@ private fun AppFooter() {
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(12.dp))
-            .clickable { uriHandler.openUri(CREATOR_GITHUB_URL) }
+            .clickable { uriHandler.openUri(PROJECT_SOURCE_URL) }
             .padding(top = 8.dp, bottom = 8.dp),
         color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.72f),
         style = MaterialTheme.typography.labelMedium,
@@ -489,7 +491,9 @@ private fun AppFooter() {
     )
 }
 
-private const val CREATOR_GITHUB_URL = "https://github.com/Ali-Sdg90"
+private const val PROJECT_SOURCE_URL = "https://github.com/Ali-Sdg90/health-data-relay"
+private const val PRIVACY_POLICY_URL = "https://ali-sdg.is-a.dev/health-data-relay/privacy/"
+private const val TERMS_OF_SERVICE_URL = "https://ali-sdg.is-a.dev/health-data-relay/terms/"
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -498,6 +502,7 @@ private fun SettingsSheet(
     onDismiss: () -> Unit,
     onSave: (BackupSettings) -> Unit,
 ) {
+    val uriHandler = LocalUriHandler.current
     var backupHour by remember(settings.backupHour) { mutableStateOf(settings.backupHour) }
     var backupMinute by remember(settings.backupMinute) { mutableStateOf(settings.backupMinute) }
     var folderName by remember(settings.driveFolderName) { mutableStateOf(settings.driveFolderName) }
@@ -518,57 +523,69 @@ private fun SettingsSheet(
             modifier = Modifier
                 .fillMaxWidth()
                 .verticalScroll(rememberScrollState())
-                .padding(start = 22.dp, end = 22.dp, bottom = 28.dp),
-            verticalArrangement = Arrangement.spacedBy(18.dp),
+                .padding(start = 20.dp, end = 20.dp, bottom = 22.dp),
         ) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Column(Modifier.weight(1f)) {
-                    Text("Settings", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
-                    Spacer(Modifier.height(24.dp))
-                }
-                IconButton(onClick = onDismiss) {
-                    Icon(Icons.Rounded.Close, contentDescription = "Close settings")
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Text(
+                    "Settings",
+                    modifier = Modifier.weight(1f),
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold,
+                )
+                IconButton(onClick = onDismiss, modifier = Modifier.size(40.dp)) {
+                    Icon(
+                        Icons.Rounded.Close,
+                        contentDescription = "Close settings",
+                        modifier = Modifier.size(22.dp),
+                    )
                 }
             }
+            Spacer(Modifier.height(10.dp))
 
-            Text("SCHEDULE", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary)
+            SettingsSectionLabel("SCHEDULE")
+            Spacer(Modifier.height(8.dp))
             SettingsActionCard(
                 icon = Icons.Rounded.Schedule,
                 title = "Automatic backup",
                 value = "%02d:%02d".format(backupHour, backupMinute),
                 onClick = { timePickerVisible = true },
             )
+            Spacer(Modifier.height(16.dp))
 
-            Text("BACKUP DATA", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary)
+            SettingsSectionLabel("BACKUP DATA")
+            Spacer(Modifier.height(8.dp))
             SettingsActionCard(
                 icon = Icons.Rounded.Checklist,
                 title = "Included data",
                 value = includedMetrics.summaryLabel(),
                 onClick = { backupDataVisible = true },
             )
+            Spacer(Modifier.height(16.dp))
 
-            Text("GOOGLE DRIVE", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary)
+            SettingsSectionLabel("GOOGLE DRIVE")
+            Spacer(Modifier.height(8.dp))
             OutlinedTextField(
                 value = folderName,
                 onValueChange = { folderName = it.take(MAX_DRIVE_FOLDER_NAME_LENGTH) },
                 modifier = Modifier.fillMaxWidth(),
                 label = { Text("Backup folder name") },
                 leadingIcon = { Icon(Icons.Rounded.Folder, contentDescription = null) },
-                supportingText = {
-                    Text(
-                        if (folderName.isBlank()) {
-                            "Enter a folder name"
-                        } else {
-                            "Backups will be stored in this Drive folder"
-                        },
-                    )
+                supportingText = if (folderName.isBlank()) {
+                    { Text("Enter a folder name") }
+                } else {
+                    null
                 },
                 isError = folderName.isBlank(),
                 singleLine = true,
-                shape = RoundedCornerShape(16.dp),
+                shape = RoundedCornerShape(15.dp),
             )
+            Spacer(Modifier.height(16.dp))
 
-            Text("FILE DATE", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary)
+            SettingsSectionLabel("FILE DATE")
+            Spacer(Modifier.height(8.dp))
             Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                 DateSystemCard(
                     title = "Jalali",
@@ -585,6 +602,7 @@ private fun SettingsSheet(
                     onClick = { dateSystem = FileDateSystem.GREGORIAN },
                 )
             }
+            Spacer(Modifier.height(18.dp))
 
             Button(
                 onClick = {
@@ -601,10 +619,33 @@ private fun SettingsSheet(
                 enabled = folderName.isNotBlank(),
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(54.dp),
-                shape = RoundedCornerShape(17.dp),
+                    .height(50.dp),
+                shape = RoundedCornerShape(15.dp),
             ) {
                 Text("Save settings", fontWeight = FontWeight.SemiBold)
+            }
+            Spacer(Modifier.height(18.dp))
+
+            SettingsSectionLabel("LEGAL")
+            Spacer(Modifier.height(8.dp))
+            Card(
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer),
+                shape = RoundedCornerShape(16.dp),
+            ) {
+                SettingsLinkRow(
+                    icon = Icons.Rounded.PrivacyTip,
+                    title = "Privacy Policy",
+                    onClick = { uriHandler.openUri(PRIVACY_POLICY_URL) },
+                )
+                HorizontalDivider(
+                    modifier = Modifier.padding(start = 62.dp),
+                    color = MaterialTheme.colorScheme.outlineVariant,
+                )
+                SettingsLinkRow(
+                    icon = Icons.Rounded.Description,
+                    title = "Terms of Service",
+                    onClick = { uriHandler.openUri(TERMS_OF_SERVICE_URL) },
+                )
             }
         }
     }
@@ -731,6 +772,17 @@ private fun Set<BackupMetric>.summaryLabel(): String = when (size) {
 }
 
 @Composable
+private fun SettingsSectionLabel(text: String) {
+    Text(
+        text = text,
+        style = MaterialTheme.typography.labelSmall,
+        color = MaterialTheme.colorScheme.primary,
+        fontWeight = FontWeight.SemiBold,
+        letterSpacing = 1.1.sp,
+    )
+}
+
+@Composable
 private fun SettingsActionCard(
     icon: ImageVector,
     title: String,
@@ -742,27 +794,85 @@ private fun SettingsActionCard(
             .fillMaxWidth()
             .clickable(onClick = onClick),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer),
-        shape = RoundedCornerShape(18.dp),
+        shape = RoundedCornerShape(16.dp),
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp),
+                .padding(horizontal = 14.dp, vertical = 12.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Box(
                 modifier = Modifier
-                    .size(40.dp)
+                    .size(36.dp)
                     .clip(CircleShape)
                     .background(MaterialTheme.colorScheme.primaryContainer),
                 contentAlignment = Alignment.Center,
             ) {
-                Icon(icon, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
+                Icon(
+                    icon,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(20.dp),
+                )
             }
-            Spacer(Modifier.width(13.dp))
-            Text(title, modifier = Modifier.weight(1f), style = MaterialTheme.typography.titleMedium)
-            Text(value, color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold)
+            Spacer(Modifier.width(12.dp))
+            Text(
+                title,
+                modifier = Modifier.weight(1f),
+                style = MaterialTheme.typography.titleSmall,
+                fontWeight = FontWeight.Medium,
+            )
+            Text(
+                value,
+                style = MaterialTheme.typography.titleSmall,
+                color = MaterialTheme.colorScheme.primary,
+                fontWeight = FontWeight.SemiBold,
+            )
         }
+    }
+}
+
+@Composable
+private fun SettingsLinkRow(
+    icon: ImageVector,
+    title: String,
+    onClick: () -> Unit,
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick)
+            .padding(horizontal = 14.dp, vertical = 11.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Box(
+            modifier = Modifier
+                .size(34.dp)
+                .clip(CircleShape)
+                .background(MaterialTheme.colorScheme.primaryContainer),
+            contentAlignment = Alignment.Center,
+        ) {
+            Icon(
+                icon,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.size(19.dp),
+            )
+        }
+        Spacer(Modifier.width(12.dp))
+        Text(
+            title,
+            modifier = Modifier.weight(1f),
+            style = MaterialTheme.typography.bodyLarge,
+            fontWeight = FontWeight.Medium,
+        )
+        Icon(
+            Icons.AutoMirrored.Rounded.ArrowForward,
+            contentDescription = null,
+            modifier = Modifier.size(18.dp),
+            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
     }
 }
 
@@ -783,9 +893,9 @@ private fun DateSystemCard(
                 MaterialTheme.colorScheme.surfaceContainer
             },
         ),
-        shape = RoundedCornerShape(18.dp),
+        shape = RoundedCornerShape(16.dp),
     ) {
-        Column(Modifier.padding(14.dp)) {
+        Column(Modifier.padding(12.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Icon(
                     Icons.Rounded.CalendarMonth,
@@ -796,7 +906,7 @@ private fun DateSystemCard(
                 Spacer(Modifier.weight(1f))
                 RadioButton(selected = selected, onClick = onClick, modifier = Modifier.size(22.dp))
             }
-            Spacer(Modifier.height(10.dp))
+            Spacer(Modifier.height(7.dp))
             Text(title, fontWeight = FontWeight.SemiBold)
             Text(example, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }

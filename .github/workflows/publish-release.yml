@@ -123,9 +123,9 @@ jobs:
           grep -q "jar verified" "$RUNNER_TEMP/aab-signature.txt"
 
           mkdir -p dist
-          cp "$apk_path" "dist/auto-health-sync-${RELEASE_TAG}.apk"
-          cp "$aab_path" "dist/auto-health-sync-${RELEASE_TAG}.aab"
-          cp "$mapping_path" "dist/auto-health-sync-${RELEASE_TAG}-mapping.txt"
+          cp "$apk_path" "dist/health-data-relay-${RELEASE_TAG}.apk"
+          cp "$aab_path" "dist/health-data-relay-${RELEASE_TAG}.aab"
+          cp "$mapping_path" "dist/health-data-relay-${RELEASE_TAG}-mapping.txt"
 
           (
             cd dist

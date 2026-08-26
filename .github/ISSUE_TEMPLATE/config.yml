@@ -1,5 +1,5 @@
 blank_issues_enabled: false
 contact_links:
   - name: Security vulnerability
-    url: https://github.com/Ali-Sdg90/auto-health-sync/security/policy
+    url: https://github.com/Ali-Sdg90/health-data-relay/security/policy
     about: Review the security policy and report vulnerabilities privately.

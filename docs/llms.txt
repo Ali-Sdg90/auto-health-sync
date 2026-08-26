@@ -6,12 +6,12 @@ Health Data Relay reads user-approved Health Connect categories, creates compact
 
 ## Primary pages
 
-- [Homepage](https://ali-sdg.is-a.dev/auto-health-sync/): Product overview, data flow, features, and downloads.
-- [Privacy Policy](https://ali-sdg.is-a.dev/auto-health-sync/privacy/): Data access, processing, storage, security, retention, and user controls.
-- [Terms of Service](https://ali-sdg.is-a.dev/auto-health-sync/terms/): Conditions, responsibilities, third-party services, disclaimers, and limitations.
+- [Homepage](https://ali-sdg.is-a.dev/health-data-relay/): Product overview, data flow, features, and downloads.
+- [Privacy Policy](https://ali-sdg.is-a.dev/health-data-relay/privacy/): Data access, processing, storage, security, retention, and user controls.
+- [Terms of Service](https://ali-sdg.is-a.dev/health-data-relay/terms/): Conditions, responsibilities, third-party services, disclaimers, and limitations.
 
 ## Project resources
 
-- [Source code](https://github.com/Ali-Sdg90/auto-health-sync): Android application source and documentation.
-- [Latest release](https://github.com/Ali-Sdg90/auto-health-sync/releases/latest): Current downloadable release.
-- [Architecture](https://github.com/Ali-Sdg90/auto-health-sync/blob/main/docs/ARCHITECTURE.md): Technical data flow and component responsibilities.
+- [Source code](https://github.com/Ali-Sdg90/health-data-relay): Android application source and documentation.
+- [Latest release](https://github.com/Ali-Sdg90/health-data-relay/releases/latest): Current downloadable release.
+- [Architecture](https://github.com/Ali-Sdg90/health-data-relay/blob/main/docs/ARCHITECTURE.md): Technical data flow and component responsibilities.

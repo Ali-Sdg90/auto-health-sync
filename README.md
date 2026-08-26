@@ -3,17 +3,17 @@
 <p align="center"><strong>An Android health data pipeline from Health Connect to your Google Drive.</strong></p>
 
 <p align="center">
-  <a href="https://github.com/Ali-Sdg90/auto-health-sync/actions/workflows/ci.yml"><img alt="CI status" src="https://github.com/Ali-Sdg90/auto-health-sync/actions/workflows/ci.yml/badge.svg"></a>
-  <a href="https://github.com/Ali-Sdg90/auto-health-sync/releases/latest"><img alt="Latest release" src="https://img.shields.io/github/v/release/Ali-Sdg90/auto-health-sync?display_name=tag&sort=semver"></a>
+  <a href="https://github.com/Ali-Sdg90/health-data-relay/actions/workflows/ci.yml"><img alt="CI status" src="https://github.com/Ali-Sdg90/health-data-relay/actions/workflows/ci.yml/badge.svg"></a>
+  <a href="https://github.com/Ali-Sdg90/health-data-relay/releases/latest"><img alt="Latest release" src="https://img.shields.io/github/v/release/Ali-Sdg90/health-data-relay?display_name=tag&sort=semver"></a>
   <img alt="Android 9 or newer" src="https://img.shields.io/badge/Android-9%2B-3DDC84?logo=android&logoColor=white">
   <a href="LICENSE"><img alt="Apache 2.0 license" src="https://img.shields.io/badge/License-Apache_2.0-blue.svg"></a>
 </p>
 
 <p align="center">
-  <a href="https://ali-sdg.is-a.dev/auto-health-sync/">Website</a> ·
-  <a href="https://github.com/Ali-Sdg90/auto-health-sync/releases/latest">Download</a> ·
-  <a href="https://ali-sdg.is-a.dev/auto-health-sync/privacy/">Privacy</a> ·
-  <a href="https://ali-sdg.is-a.dev/auto-health-sync/terms/">Terms</a>
+  <a href="https://ali-sdg.is-a.dev/health-data-relay/">Website</a> ·
+  <a href="https://github.com/Ali-Sdg90/health-data-relay/releases/latest">Download</a> ·
+  <a href="https://ali-sdg.is-a.dev/health-data-relay/privacy/">Privacy</a> ·
+  <a href="https://ali-sdg.is-a.dev/health-data-relay/terms/">Terms</a>
 </p>
 
 <p align="center">
@@ -124,21 +124,21 @@ Disabled categories are omitted. When weight is enabled but unavailable for the 
 - There is no developer-operated backend, analytics, advertising SDK, telemetry, or independent app account.
 - Health permissions and Google authorization can be revoked at any time.
 
-See the public [Privacy Policy](https://ali-sdg.is-a.dev/auto-health-sync/privacy/) for the complete data-handling details.
+See the public [Privacy Policy](https://ali-sdg.is-a.dev/health-data-relay/privacy/) for the complete data-handling details.
 
 ## Getting started
 
 ### Install the app
 
-Download the signed APK and its checksum from the [latest GitHub Release](https://github.com/Ali-Sdg90/auto-health-sync/releases/latest). The app requires Android 9 or newer, Health Connect, and a Google account for Drive backups.
+Download the signed APK and its checksum from the [latest GitHub Release](https://github.com/Ali-Sdg90/health-data-relay/releases/latest). The app requires Android 9 or newer, Health Connect, and a Google account for Drive backups.
 
 ### Build from source
 
 Requirements: JDK 17, Android SDK 36, and a compatible Android device or emulator.
 
 ```bash
-git clone https://github.com/Ali-Sdg90/auto-health-sync.git
-cd auto-health-sync
+git clone https://github.com/Ali-Sdg90/health-data-relay.git
+cd health-data-relay
 ./gradlew testDebugUnitTest lintDebug assembleDebug
 ```
 

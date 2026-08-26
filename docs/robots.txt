@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://ali-sdg.is-a.dev/auto-health-sync/sitemap.xml
+Sitemap: https://ali-sdg.is-a.dev/health-data-relay/sitemap.xml
