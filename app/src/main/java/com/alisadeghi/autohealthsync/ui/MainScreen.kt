@@ -2,8 +2,12 @@ package com.alisadeghi.autohealthsync.ui
 
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.rememberScrollState
@@ -36,6 +40,7 @@ import androidx.compose.material.icons.rounded.CalendarMonth
 import androidx.compose.material.icons.rounded.BatteryChargingFull
 import androidx.compose.material.icons.rounded.Description
 import androidx.compose.material.icons.rounded.ErrorOutline
+import androidx.compose.material.icons.rounded.ExpandMore
 import androidx.compose.material.icons.rounded.Favorite
 import androidx.compose.material.icons.rounded.Folder
 import androidx.compose.material.icons.rounded.HealthAndSafety
@@ -512,6 +517,7 @@ private fun SettingsSheet(
     }
     var timePickerVisible by remember { mutableStateOf(false) }
     var backupDataVisible by remember { mutableStateOf(false) }
+    var legalExpanded by remember { mutableStateOf(false) }
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
     ModalBottomSheet(
@@ -626,26 +632,45 @@ private fun SettingsSheet(
             }
             Spacer(Modifier.height(18.dp))
 
-            SettingsSectionLabel("LEGAL")
-            Spacer(Modifier.height(8.dp))
-            Card(
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer),
-                shape = RoundedCornerShape(16.dp),
+            ExpandableSettingsSectionLabel(
+                text = "LEGAL",
+                supportingText = "Privacy & terms",
+                expanded = legalExpanded,
+                onClick = { legalExpanded = !legalExpanded },
+            )
+            AnimatedVisibility(
+                visible = legalExpanded,
+                enter = expandVertically(
+                    animationSpec = tween(durationMillis = 220),
+                    expandFrom = Alignment.Top,
+                ) + fadeIn(animationSpec = tween(durationMillis = 160, delayMillis = 40)),
+                exit = shrinkVertically(
+                    animationSpec = tween(durationMillis = 180),
+                    shrinkTowards = Alignment.Top,
+                ) + fadeOut(animationSpec = tween(durationMillis = 120)),
             ) {
-                SettingsLinkRow(
-                    icon = Icons.Rounded.PrivacyTip,
-                    title = "Privacy Policy",
-                    onClick = { uriHandler.openUri(PRIVACY_POLICY_URL) },
-                )
-                HorizontalDivider(
-                    modifier = Modifier.padding(start = 62.dp),
-                    color = MaterialTheme.colorScheme.outlineVariant,
-                )
-                SettingsLinkRow(
-                    icon = Icons.Rounded.Description,
-                    title = "Terms of Service",
-                    onClick = { uriHandler.openUri(TERMS_OF_SERVICE_URL) },
-                )
+                Column {
+                    Spacer(Modifier.height(8.dp))
+                    Card(
+                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer),
+                        shape = RoundedCornerShape(16.dp),
+                    ) {
+                        SettingsLinkRow(
+                            icon = Icons.Rounded.PrivacyTip,
+                            title = "Privacy Policy",
+                            onClick = { uriHandler.openUri(PRIVACY_POLICY_URL) },
+                        )
+                        HorizontalDivider(
+                            modifier = Modifier.padding(start = 62.dp),
+                            color = MaterialTheme.colorScheme.outlineVariant,
+                        )
+                        SettingsLinkRow(
+                            icon = Icons.Rounded.Description,
+                            title = "Terms of Service",
+                            onClick = { uriHandler.openUri(TERMS_OF_SERVICE_URL) },
+                        )
+                    }
+                }
             }
         }
     }
@@ -780,6 +805,46 @@ private fun SettingsSectionLabel(text: String) {
         fontWeight = FontWeight.SemiBold,
         letterSpacing = 1.1.sp,
     )
+}
+
+@Composable
+private fun ExpandableSettingsSectionLabel(
+    text: String,
+    supportingText: String,
+    expanded: Boolean,
+    onClick: () -> Unit,
+) {
+    val chevronRotation by animateFloatAsState(
+        targetValue = if (expanded) 180f else 0f,
+        animationSpec = tween(durationMillis = 220),
+        label = "Legal section chevron",
+    )
+
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(10.dp))
+            .clickable(onClick = onClick)
+            .padding(start = 10.dp, end = 14.dp, top = 9.dp, bottom = 9.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        SettingsSectionLabel(text)
+        Spacer(Modifier.weight(1f))
+        Text(
+            text = supportingText,
+            style = MaterialTheme.typography.labelMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+        Spacer(Modifier.width(4.dp))
+        Icon(
+            imageVector = Icons.Rounded.ExpandMore,
+            contentDescription = if (expanded) "Collapse legal links" else "Expand legal links",
+            modifier = Modifier
+                .size(20.dp)
+                .rotate(chevronRotation),
+            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+    }
 }
 
 @Composable
@@ -1241,6 +1306,8 @@ private fun ReportDateSelector(
                     Text(
                         "Choose report date",
                         modifier = Modifier.padding(start = 24.dp, top = 16.dp),
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.SemiBold,
                     )
                 },
                 headline = null,
