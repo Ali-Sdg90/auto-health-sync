@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.6.0](https://github.com/Ali-Sdg90/health-data-relay/compare/v1.5.0...v1.6.0) (2026-08-26)
+
+
+### New Features
+
+* **settings:** add collapsible legal section ([3f73c90](https://github.com/Ali-Sdg90/health-data-relay/commit/3f73c9035399c9da1fec7aad3b8a7a7f41992a10))
+
+
+### Bug Fixes
+
+* **brand:** rename app to Health Data Relay ([ea38d58](https://github.com/Ali-Sdg90/health-data-relay/commit/ea38d585fb0cfce7c9f735c6459556d12e76d395))
+* update new address links in app, improve setting layout and add legal links in the app ([4caa974](https://github.com/Ali-Sdg90/health-data-relay/commit/4caa974e6692c247c739cf1704df2c54cbcd405c))
+
 ## [1.5.0](https://github.com/Ali-Sdg90/health-data-relay/compare/v1.4.0...v1.5.0) (2026-08-24)
 
 
