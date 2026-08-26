@@ -1,8 +1,8 @@
-# Auto Health Sync
+# Health Data Relay
 
 > An open-source Android personal health data pipeline from Health Connect to the user's Google Drive.
 
-Auto Health Sync reads user-approved Health Connect categories, creates compact daily JSON summaries on the device, and uploads them directly to Google Drive. It has no developer-operated backend, analytics, advertising, or independent user-account system.
+Health Data Relay reads user-approved Health Connect categories, creates compact daily JSON summaries on the device, and uploads them directly to Google Drive. It has no developer-operated backend, analytics, advertising, or independent user-account system.
 
 ## Primary pages
 

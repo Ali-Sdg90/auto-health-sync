@@ -1,6 +1,6 @@
 # Contributing
 
-Contributions are welcome when they keep Auto Health Sync small, reliable, and privacy-focused.
+Contributions are welcome when they keep Health Data Relay small, reliable, and privacy-focused.
 
 1. Search existing issues before starting substantial work.
 2. Create a focused branch and keep changes scoped.

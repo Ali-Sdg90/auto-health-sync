@@ -1,6 +1,6 @@
 # Architecture
 
-Auto Health Sync is an Android app that creates one health summary per day and stores it in Google Drive.
+Health Data Relay is an Android app that creates one health summary per day and stores it in Google Drive.
 
 ## Data flow
 

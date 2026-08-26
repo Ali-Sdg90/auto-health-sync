@@ -1,4 +1,4 @@
-# Auto Health Sync
+# Health Data Relay
 
 <p align="center"><strong>An Android health data pipeline from Health Connect to your Google Drive.</strong></p>
 
@@ -17,10 +17,10 @@
 </p>
 
 <p align="center">
-  <img src="docs/assets/og-image.jpg" alt="Auto Health Sync pipeline: Health Connect to daily JSON to Google Drive" width="100%">
+  <img src="docs/assets/og-image.jpg" alt="Health Data Relay pipeline: Health Connect to daily JSON to Google Drive" width="100%">
 </p>
 
-Auto Health Sync creates a direct pipeline from Health Connect to Google Drive. It reads the health categories the user approves, reduces each selected day to a compact JSON summary, and uploads the file directly to a user-owned Drive folder.
+Health Data Relay creates a direct pipeline from Health Connect to Google Drive. It reads the health categories the user approves, reduces each selected day to a compact JSON summary, and uploads the file directly to a user-owned Drive folder.
 
 The app keeps this pipeline deliberately small: no developer backend, no analytics, no advertising, read-only Health Connect access, and the narrow Google Drive `drive.file` scope.
 
@@ -158,7 +158,7 @@ Detailed maintainer instructions are available in [docs/RELEASING.md](docs/RELEA
 
 ## Disclaimer
 
-Auto Health Sync is a personal data utility, not a medical device or a substitute for professional medical advice. Users should verify important backup files before relying on them.
+Health Data Relay is a personal data utility, not a medical device or a substitute for professional medical advice. Users should verify important backup files before relying on them.
 
 ## License
 

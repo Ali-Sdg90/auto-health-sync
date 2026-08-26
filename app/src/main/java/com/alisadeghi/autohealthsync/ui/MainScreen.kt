@@ -248,7 +248,7 @@ private fun OnboardingScreen(
                         fontWeight = FontWeight.Bold,
                     )
                     Text(
-                        "Complete the required access once so Auto Health Sync can back up in the background.",
+                        "Complete the required access once so Health Data Relay can back up in the background.",
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
@@ -286,7 +286,7 @@ private fun OnboardingScreen(
                     description = if (state.backgroundAccess.backgroundRestricted) {
                         "Background use is restricted. Open settings and select Unrestricted."
                     } else {
-                        "Open battery settings, find Auto Health Sync, and select Unrestricted."
+                        "Open battery settings, find Health Data Relay, and select Unrestricted."
                     },
                     complete = state.backgroundAccess.batteryAccessGranted,
                     actionLabel = "Open settings",
@@ -449,7 +449,7 @@ private fun AutoStartStepCard(
                 Column(Modifier.weight(1f)) {
                     Text("Auto Start", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
                     Text(
-                        if (complete) "Ready" else "Enable Auto Health Sync in $manufacturer startup settings.",
+                        if (complete) "Ready" else "Enable Health Data Relay in $manufacturer startup settings.",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
@@ -833,7 +833,7 @@ private fun AppHeader(onSettingsClick: () -> Unit) {
         Spacer(Modifier.width(15.dp))
         Column(Modifier.weight(1f)) {
             Text(
-                "Auto Health Sync",
+                "Health Data Relay",
                 style = MaterialTheme.typography.headlineSmall,
                 fontWeight = FontWeight.Bold,
                 letterSpacing = (-0.4).sp,

@@ -1,6 +1,6 @@
 # CI/CD and GitHub releases
 
-Auto Health Sync uses GitHub Actions, Conventional Commits, and Release Please. Builds from pull requests never receive signing credentials. Only a GitHub Release created from a reviewed release PR can start the signed publication job.
+Health Data Relay uses GitHub Actions, Conventional Commits, and Release Please. Builds from pull requests never receive signing credentials. Only a GitHub Release created from a reviewed release PR can start the signed publication job.
 
 ## Pipeline
 

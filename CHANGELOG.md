@@ -28,4 +28,4 @@
 
 ## Changelog
 
-Notable changes to Auto Health Sync are documented here. Future entries are generated from Conventional Commits by Release Please.
+Notable changes to Health Data Relay are documented here. Future entries are generated from Conventional Commits by Release Please.

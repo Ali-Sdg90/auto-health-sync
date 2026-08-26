@@ -1,6 +1,6 @@
-## Auto Health Sync
+## Health Data Relay
 
-Auto Health Sync is a small, reliable Android application that automatically creates a lightweight daily summary of health data stored in Android Health Connect and backs it up to the user's Google Drive.
+Health Data Relay is a small, reliable Android application that automatically creates a lightweight daily summary of health data stored in Android Health Connect and backs it up to the user's Google Drive.
 
 The application is designed primarily for personal use. Its goal is not to become a full health-tracking application, dashboard, or Health Connect replacement.
 
@@ -75,7 +75,7 @@ Health and wearable apps
     ↓
 Health Connect
     ↓
-Auto Health Sync
+Health Data Relay
     ↓
 Google Drive
 ```
@@ -682,7 +682,7 @@ Required steps are:
 
 - Complete Health Connect read, background-read, and supported history access.
 - Authorize the narrow Google Drive `drive.file` scope.
-- Disable battery optimization for Auto Health Sync and ensure background use is not restricted.
+- Disable battery optimization for Health Data Relay and ensure background use is not restricted.
 - When the installed manufacturer exposes a supported Auto Start screen, open it and require the user to confirm that Auto Start was enabled.
 
 Backup-status notifications are recommended but must remain optional because denying notification access does not prevent the backup itself.
@@ -702,7 +702,7 @@ Do not add unnecessary navigation or multiple screens unless authorization flows
 Suggested structure:
 
 ```text
-Auto Health Sync
+Health Data Relay
 
 Health Connect                 Connected ✓
 Google Drive                   Connected ✓
