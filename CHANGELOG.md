@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.5.1](https://github.com/Ali-Sdg90/auto-health-sync/compare/v1.5.0...v1.5.1) (2026-08-26)
+
+
+### Bug Fixes
+
+* **brand:** rename app to Health Data Relay ([ea38d58](https://github.com/Ali-Sdg90/auto-health-sync/commit/ea38d585fb0cfce7c9f735c6459556d12e76d395))
+
 ## [1.5.0](https://github.com/Ali-Sdg90/auto-health-sync/compare/v1.4.0...v1.5.0) (2026-08-24)
 
 
