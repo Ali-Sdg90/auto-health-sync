@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.6.1](https://github.com/Ali-Sdg90/health-data-relay/compare/v1.6.0...v1.6.1) (2026-08-27)
+
+
+### Bug Fixes
+
+* fix app notification icon, add new gallery and marketing images ([f700544](https://github.com/Ali-Sdg90/health-data-relay/commit/f700544241ae7ce5a93db2d3564c2ae8c1f549a8))
+
 ## [1.6.0](https://github.com/Ali-Sdg90/health-data-relay/compare/v1.5.0...v1.6.0) (2026-08-26)
 
 
