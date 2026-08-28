@@ -756,34 +756,6 @@ h1 {
     }
   }
 
-  @keyframes intro-header {
-    from {
-      opacity: 0;
-      transform: translateY(-7px);
-    }
-
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
-  }
-
-  @keyframes intro-screenshot {
-    from {
-      opacity: 0;
-      transform: translate3d(18px, 10px, 0) scale(0.985);
-    }
-
-    to {
-      opacity: 1;
-      transform: translate3d(0, 0, 0) scale(1);
-    }
-  }
-
-  .site-header {
-    animation: intro-header 480ms cubic-bezier(0.22, 1, 0.36, 1) both;
-  }
-
   .hero-copy > .eyebrow,
   .hero-copy > h1,
   .hero-copy > p:not(.eyebrow),
@@ -816,7 +788,7 @@ h1 {
   }
 
   .app-screenshot {
-    animation: intro-screenshot 780ms cubic-bezier(0.22, 1, 0.36, 1) 160ms both;
+    animation: intro-rise 780ms cubic-bezier(0.22, 1, 0.36, 1) 160ms both;
   }
 
   .quick-facts {

@@ -50,3 +50,7 @@ Code & Release
 - [x] Update Release PR / changelog to v1.5.0
 - [x] Build final signed APK/AAB
 - [x] Verify signatures and checksums
+
+---
+
+Project is Done! :D🎉
